@@ -1,0 +1,33 @@
+services: # 이 파일로 관리할 서비스(컨테이너)들의 목록
+
+  # PostgreSQL 데이터베이스 서비스 정의
+  db:
+    image: postgres:17 # 공식 PostgreSQL 15 버전 이미지를 사용
+    container_name: lotto_db_container # 컨테이너에 이름 부여
+    environment: # 컨테이너 내에서 사용할 환경 변수 (매우 중요)
+      POSTGRES_DB: lotto          # application.yml의 DB 이름과 일치
+      POSTGRES_USER: lotto_id     # application.yml의 username과 일치
+      POSTGRES_PASSWORD: lotto_pw # application.yml의 password와 일치
+    ports:
+      # 로컬 컴퓨터의 5432 포트와 컨테이너의 5432 포트를 연결
+      # 만약 로컬에 이미 PostgreSQL이 5432 포트를 쓰고 있다면, "5433:5432" 와 같이 변경
+      - "5432:5432"
+    volumes: # 데이터를 영구적으로 저장하기 위한 설정
+      - postgres_data:/var/lib/postgresql/data
+
+  # Spring Boot 백엔드 애플리케이션 서비스 정의
+  backend:
+    build: . # 현재 디렉토리(.)의 Dockerfile을 사용하여 이미지를 빌드
+    container_name: lotto_backend_container
+    ports:
+      - "8080:8080" # 로컬 8080 포트와 컨테이너 8080 포트 연결
+    depends_on:
+      - db # 'db' 서비스가 먼저 실행된 후에 'backend' 서비스를 실행
+    environment:
+      # Spring Boot 애플리케이션이 컨테이너 내부의 'db'를 바라보도록 설정
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/lotto
+      - SPRING_DATASOURCE_USERNAME=lotto_id
+      - SPRING_DATASOURCE_PASSWORD=lotto_pw
+
+volumes: # 위에서 사용한 'postgres_data' 볼륨을 정의
+  postgres_data:
