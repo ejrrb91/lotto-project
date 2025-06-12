@@ -1,3 +1,15 @@
 /gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
+
+# 모든 .yml 파일은 항상 텍스트로 취급하고, UTF-8 인코딩을 사용하도록 지정합니다.
+# eol=lf 는 줄바꿈 문자(Line Ending)를 통일하는 좋은 설정입니다.
+*.yml       text eol=lf encoding=utf-8
+
+# 앞으로 만들 다른 텍스트 기반 파일들도 미리 지정해두면 좋습니다.
+*.java      text eol=lf encoding=utf-8
+*.js        text eol=lf encoding=utf-8
+*.vue       text eol=lf encoding=utf-8
+*.html      text eol=lf encoding=utf-8
+*.css       text eol=lf encoding=utf-8
+*.md        text eol=lf encoding=utf-8
