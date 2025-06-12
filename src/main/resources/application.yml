@@ -1,9 +1,9 @@
 spring:
   # ?????? ?? ??
   datasource:
-    url: jdbc:postgresql://localhost:5432/lotto  # ?? DB ??
-    username: lotto_id                              # ?? ??
-    password: lotto_pw                              # ????
+    url: jdbc:postgresql://localhost:5432/lotto  # STEP 3?? ?? DB ??
+    username: lotto_id                            # STEP 3?? ?? ?? ??
+    password: lotto_pw                        # STEP 3?? ??? ????
     driver-class-name: org.postgresql.Driver
 
   # JPA (Java Persistence API) ??
