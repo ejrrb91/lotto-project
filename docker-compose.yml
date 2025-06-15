@@ -13,7 +13,7 @@ services: # 이 파일로 관리할 서비스(컨테이너)들의 목록
       # 만약 로컬에 이미 PostgreSQL이 5432 포트를 쓰고 있다면, "5433:5432" 와 같이 변경
       - "5432:5432"
     volumes: # 데이터를 영구적으로 저장하기 위한 설정
-      - postgres_data:/var/lib/postgresql/data
+      - lotto_postgres_data:/var/lib/postgresql/data
 
   # Spring Boot 백엔드 애플리케이션 서비스 정의
   backend:
@@ -28,6 +28,8 @@ services: # 이 파일로 관리할 서비스(컨테이너)들의 목록
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/lotto
       - SPRING_DATASOURCE_USERNAME=lotto_id
       - SPRING_DATASOURCE_PASSWORD=lotto_pw
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
-volumes: # 위에서 사용한 'postgres_data' 볼륨을 정의
-  postgres_data:
+volumes:
+ lotto_postgres_data:
+   external: true #이 볼륨은 외부에서 관리하므로 삭제 X

@@ -23,7 +23,7 @@ public class LottoCrawlingService {
   public void saveWinningNumbersByRound(int round) {
     //1.DB에 해당 회차 데이터가 이미 있는지 확인.
     if (lottoRoundRepository.existsById(round)) {
-      System.out.println("회차 " + round + " 데이터는 이미 DB에 존재합니다.");
+      System.out.println(round + "회차, 데이터는 이미 DB에 존재합니다.");
       return;
     }
 
@@ -38,7 +38,7 @@ public class LottoCrawlingService {
 
       //4.파싱한 정보가 유효한지 확인(7개 번호 모두 파싱)
       if (winNumbers.size() < 7) {
-        System.out.println("회차 " + round + "의 당첨 결과가 아직 발표되지 않았습니다.");
+        System.out.println(round + "회차의 당첨 결과가 아직 발표되지 않았습니다.");
         return;
       }
 
@@ -56,10 +56,10 @@ public class LottoCrawlingService {
 
       //6.완성된 엔티티를 데이터베이스에 저장합니다.
       lottoRoundRepository.save(lottoRound);
-      System.out.println("회차 " + round + " 당첨 번호 저장 성공");
+      System.out.println(round + "회차, 당첨 번호 저장 성공");
 
     } catch (IOException e) {
-      System.err.println("회차 " + round + " 데이터를 가져오는 중 오류가 발생했습니다. : " + e.getMessage());
+      System.err.println(round + "회차, 데이터를 가져오는 중 오류가 발생했습니다. : " + e.getMessage());
     }
   }
 
