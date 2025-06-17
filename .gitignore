@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-### yml ###
-application-local.yml/
+### 민감한 정보가 담긴 local 설정 파일은 Git에 포함하지 않음 ###
+application-local.yml
