@@ -1,9 +1,12 @@
 package com.example.lotto_project.controller;
 
+import com.example.lotto_project.domain.User;
+import com.example.lotto_project.security.UserDetailsImpl;
 import com.example.lotto_project.service.RecommendationService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,23 +20,25 @@ public class RecommendationController {
 
   //무작위 추천 API
   @PostMapping("/random")
-  public ResponseEntity<List<Integer>> getRandomRecommendation() {
+  public ResponseEntity<List<Integer>> getRandomRecommendation(@AuthenticationPrincipal
+  UserDetailsImpl userDetails) {
 
-    //TODO: 로그인 기능 구현 후, 실제 로그인한 사용자 ID를 넘겨줘야 함
-    Long tempUserId = 1L;
+    // 1. @AuthenticationPrincipal 어노테이션으로 현재 로그인한 사용자의 UserDetailsImpl 객체를 직접 받아옴.
+    User user = userDetails.getUser();
 
-    List<Integer> numbers = recommendationService.recommendRandomNumbers(tempUserId);
+    //해당 사용자의 ID를 받아 서비스에 전달
+    List<Integer> numbers = recommendationService.recommendRandomNumbers(user.getId());
 
     return ResponseEntity.ok(numbers);
   }
 
   //통계 기반 추천 API
   @PostMapping("/statistical")
-  public ResponseEntity<List<Integer>> getStatisticalRecommendation() {
-    //TODO: 로그인 기능 구현 후, 실제 로그인한 사용자 ID를 넘겨줘야 함
-    Long tempUserId = 1L;
+  public ResponseEntity<List<Integer>> getStatisticalRecommendation(
+      @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
-    List<Integer> numbers = recommendationService.recommendStatisticalNumbers(tempUserId);
+    User user = userDetails.getUser();
+    List<Integer> numbers = recommendationService.recommendStatisticalNumbers(user.getId());
 
     return ResponseEntity.ok(numbers);
   }

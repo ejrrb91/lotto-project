@@ -8,6 +8,7 @@ import com.example.lotto_project.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -42,6 +43,8 @@ public class SecurityConfig {
 
     //HTTP 요청에 대한 접근 권한을 설정
     httpSecurity.authorizeHttpRequests(auth -> auth
+        //HttpMethod.OPTIONS인 모든 요청에 대해서는 인증 없이 접근 허용(CORS preflight)
+        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
         //'/api/users/**' 경로는 인증 없이 누구나 접근 허용 (회원가입, 로그인, 소셜 로그인 등)
         .requestMatchers("/api/users/**", "/login/oauth2/**", "/oauth2/**").permitAll()
         //그 외의 모든 요청은 반드시 인증(로그인)이 필요함
@@ -61,7 +64,6 @@ public class SecurityConfig {
         //    oAuth2SuccessHandler를 호출하여 후속 작업을 진행합니다(JWT 토큰 발급 및 리디렉션).
         .successHandler(oAuth2SuccessHandler)
     );
-
 
     //JwtAuthenticationFilter를 Spring Security의 기본 필터(UsernamePasswordAuthenticationFilter) 앞에 배치
     //이렇게 하면 모든 요청이 컨트롤러에 도달하기 전에 JWT 검사를 먼저 실행.
