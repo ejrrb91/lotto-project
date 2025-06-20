@@ -4,10 +4,12 @@ import com.example.lotto_project.domain.AlgorithmType;
 import com.example.lotto_project.domain.LottoRound;
 import com.example.lotto_project.domain.Recommendation;
 import com.example.lotto_project.domain.User;
+import com.example.lotto_project.dto.MyPageResponseDto;
+import com.example.lotto_project.dto.RecommendationResponseDto;
 import com.example.lotto_project.repository.LottoRoundRepository;
 import com.example.lotto_project.repository.RecommendationRepository;
 import com.example.lotto_project.repository.UserRepository;
-import jakarta.persistence.criteria.CriteriaBuilder.In;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,7 +18,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class RecommendationService {
 
   /**
    * 무작위 로또 번호 6개를 추천 후, DB에 저장.
+   *
    * @param userId
    * @return List<Integer>, 6개의 로또 번호 리스트
    */
@@ -67,6 +69,7 @@ public class RecommendationService {
 
   /**
    * 과거 통계를 기반으로 가장 많이 나온 번호 6개를 추천하고, DB에 저장
+   *
    * @param userId
    * @return List<Integer>, 6개의 로또 번호 리스트
    */
@@ -135,7 +138,8 @@ public class RecommendationService {
 
   /**
    * Map에서 특정 번호의 카운트를 1씩 증가
-   * @param map 횟수를 기록할 Map
+   *
+   * @param map    횟수를 기록할 Map
    * @param number 카운트할 번호
    */
   private void updateFrequency(Map<Integer, Integer> map, int number) {
@@ -147,6 +151,7 @@ public class RecommendationService {
 
   /**
    * 추천 결과를 Recommendation 엔티티에 담아 DB에 저장.
+   *
    * @param userId
    * @param type
    * @param numbers
@@ -178,4 +183,28 @@ public class RecommendationService {
     recommendationRepository.save(recommendation);
   }
 
+  @Transactional(readOnly = true)
+  public MyPageResponseDto getMyRecommendations(Long userId) {
+    //1. 최신 당첨 번호 조회(데이터가 없을 경우 null 처리)
+    LottoRound latestRound = lottoRoundRepository.findTopByOrderByRoundDesc().orElse(null);
+
+    //2. 당첨 회차 정보가 아예 없을 경우 빈 데이터 반환
+    if (latestRound == null) {
+      return new MyPageResponseDto(null, List.of());
+    }
+
+    //3. 가장 최신 회차 번호를 기준으로, 해당 회차에 대한 나의 추천 기록만 조회
+    List<Recommendation> recommendations = recommendationRepository.findByUserIdAndLottoRoundOrderByIdDesc(
+        userId, latestRound.getRound());
+
+    //4. 추천 기록(Entity) 목록을 DTO 목록으로 변환
+    List<RecommendationResponseDto> recommendationResponseDtos = new ArrayList<>();
+
+    for (Recommendation recommendation : recommendations) {
+      RecommendationResponseDto recommendationResponseDto = new RecommendationResponseDto(
+          recommendation);
+      recommendationResponseDtos.add(recommendationResponseDto);
+    }
+    return new MyPageResponseDto(latestRound, recommendationResponseDtos);
+  }
 }

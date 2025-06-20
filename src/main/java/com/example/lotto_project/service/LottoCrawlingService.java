@@ -1,10 +1,17 @@
 package com.example.lotto_project.service;
 
 import com.example.lotto_project.domain.LottoRound;
+import com.example.lotto_project.domain.Recommendation;
+import com.example.lotto_project.dto.MainPageResponseDto;
 import com.example.lotto_project.repository.LottoRoundRepository;
+import com.example.lotto_project.repository.RecommendationRepository;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
@@ -18,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class LottoCrawlingService {
 
   private final LottoRoundRepository lottoRoundRepository;
+  private final RecommendationRepository recommendationRepository;
+
 
   @Transactional
   public void saveWinningNumbersByRound(int round) {
@@ -54,10 +63,41 @@ public class LottoCrawlingService {
       lottoRound.setWinNum6(Integer.parseInt(winNumbers.get(5).text()));
       lottoRound.setBonusNum(Integer.parseInt(winNumbers.get(6).text()));
 
-      //6.완성된 엔티티를 데이터베이스에 저장합니다.
+      //6.완성된 엔티티를 데이터베이스에 저장.
       lottoRoundRepository.save(lottoRound);
       System.out.println(round + "회차, 당첨 번호 저장 성공");
 
+      //7. 저장된 최신 회차의 당첨번호 6개를 Set으로 만듦.(빠른 조회를 위해)
+      Set<Integer> winningNumbers = new HashSet<>(List.of(lottoRound.getWinNum1(),
+          lottoRound.getWinNum2(), lottoRound.getWinNum3(), lottoRound.getWinNum4(),
+          lottoRound.getWinNum5(), lottoRound.getWinNum6()));
+
+      int bonusNum = lottoRound.getBonusNum();
+
+      //8. 방금 추첨이 끝난 회차에 대해 사용자들이 추천받았던 모든 기록을 가져옴.
+      List<Recommendation> recommendations = recommendationRepository.findAllByLottoRound(round);
+
+      //9. 각 추천 기록을 순회하면서 당첨 개수를 계산하고 업데이트 합니다.
+      for (Recommendation recommendation : recommendations) {
+        List<Integer> userNumbers = List.of(recommendation.getNum1(), recommendation.getNum2(),
+            recommendation.getNum3(), recommendation.getNum4(), recommendation.getNum5(),
+            recommendation.getNum6());
+
+        int matchCount = 0;
+        //보너스 번호가 포함되어 있는지 확인
+        boolean hasBonus = userNumbers.contains(bonusNum);
+
+        for (Integer userNumber : userNumbers) {
+          if (winningNumbers.contains(userNumber)) {
+            matchCount++;
+          }
+        }
+        //계산된 일치하는 갯수를 엔티티에 설정
+        recommendation.setMatchCount(matchCount);
+        //보너스 번호 일치 여부도 엔티티에 설정
+        recommendation.setIsBonusMatched(hasBonus);
+      }
+      //@Transactional 때문에, for문이 끝난 뒤 변경된 내용이 자동으로 DB에 저장
     } catch (IOException e) {
       System.err.println(round + "회차, 데이터를 가져오는 중 오류가 발생했습니다. : " + e.getMessage());
     }
@@ -97,5 +137,46 @@ public class LottoCrawlingService {
       System.err.println("최신 회차 업데이트 중 오류 발생. : " + e.getMessage());
       return "업데이트 중 오류가 발생했습니다.";
     }
+  }
+
+  @Transactional(readOnly = true)
+  public MainPageResponseDto getLatestLottoRound() {
+    //1. 최신 당첨 회차 정보를 가져옴
+    LottoRound latestRound = lottoRoundRepository.findTopByOrderByRoundDesc().orElse(null);
+
+    //2. DB에 당첨 정보가 없을 경우, 빈 값을 반환
+    if (latestRound == null) {
+      return new MainPageResponseDto(null, new long[5]);
+    }
+
+    //3. 해당 회차에 대한 모든 추천 기록을 가져옴.
+    List<Recommendation> recommendations = recommendationRepository.findAllByLottoRound(
+        latestRound.getRound());
+
+    //4. 각 등수별 당첨 횟수를 저장할 배열 초기화
+    long[] prizeCounts = new long[5];
+
+    //5. 모든 추천 기록을 순회하며 등수 계산
+    for (Recommendation recommendation : recommendations) {
+      Integer matchCount = recommendation.getMatchCount();
+      Boolean isBonusMatched = recommendation.getIsBonusMatched();
+      if (matchCount == null) {
+        continue;
+      }
+      //6. DB에 저장된 값을 기준으로 등수를 카운트
+      if (matchCount == 6) { //1등
+        prizeCounts[0]++;
+      } else if (matchCount == 5 && isBonusMatched != null && isBonusMatched) { //2등
+        prizeCounts[1]++;
+      } else if (matchCount == 5) { //3등
+        prizeCounts[2]++;
+      } else if (matchCount == 4) { //4등
+        prizeCounts[3]++;
+      } else if (matchCount == 3) { //5등
+        prizeCounts[4]++;
+      }
+    }
+    //7. 최종결과를 DTO에 담아 반환
+    return new MainPageResponseDto(latestRound, prizeCounts);
   }
 }

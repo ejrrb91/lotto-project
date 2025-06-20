@@ -45,6 +45,7 @@ public class SecurityConfig {
     httpSecurity.authorizeHttpRequests(auth -> auth
         //HttpMethod.OPTIONS인 모든 요청에 대해서는 인증 없이 접근 허용(CORS preflight)
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        .requestMatchers("/api/main-page").permitAll()
         //'/api/users/**' 경로는 인증 없이 누구나 접근 허용 (회원가입, 로그인, 소셜 로그인 등)
         .requestMatchers("/api/users/**", "/login/oauth2/**", "/oauth2/**").permitAll()
         //그 외의 모든 요청은 반드시 인증(로그인)이 필요함

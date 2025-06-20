@@ -36,6 +36,13 @@ public class Recommendation {
   private int num5;
   private int num6;
 
+  //당첨번호와 일치하는 개수를 저장할 필드
+  //추첨 전이라 결과가 없을 경우 null로 표기하기 위해 Integer 사용
+  private Integer matchCount;
+
+  //보너스 번호 일치 여부를 저장할 필드
+  private Boolean isBonusMatched;
+
   @Column(nullable = false)
   private LocalDateTime recommendedAt; //추천받은 시간
 
