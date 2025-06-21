@@ -36,25 +36,33 @@ const submitForm = () => {
 
 <template>
   <div class="login-container">
-    <h1>로그인</h1>
-    <form @submit.prevent="submitForm">
+    <h2>로그인</h2>
+    <form @submit.prevent="submitForm" class="login-form">
       <div class="form-group">
-        <label for="email">이메일 : </label>
+        <label for="email">이메일</label>
         <input type="email" id="email" v-model="email" required />
       </div>
       <div class="form-group">
-        <label for="password">비밀번호 : </label>
+        <label for="password">비밀번호</label>
         <input type="password" id="password" v-model="password" required />
       </div>
       <button type="submit" :disabled="isPending">
-        {{ isPending ? '로그인 중' : '로그인' }}
+        {{ isPending ? '로그인 중...' : '로그인' }}
       </button>
     </form>
+
+    <div class="social-login-divider">
+      <span>또는</span>
+    </div>
+
+    <a href="http://localhost:8080/oauth2/authorization/google" class="google-login-btn">
+      <img src="/google-logo.svg" alt="Google logo" />
+      <span>Login with Google</span>
+    </a>
   </div>
 </template>
 
 <style scoped>
-/* 회원가입 페이지와 동일한 스타일을 사용합니다. */
 .login-container {
   max-width: 400px;
   margin: 50px auto;
@@ -76,13 +84,13 @@ const submitForm = () => {
 .form-group input {
   width: 100%;
   padding: 8px;
-  box-sizing: border-box;
+  box-sizing: border-box; /* padding이 너비에 포함되도록 설정 */
 }
 
 button {
   width: 100%;
   padding: 10px;
-  background-color: #4caf50;
+  background-color: #42b983; /* 추천 결과 색상과 통일 */
   color: white;
   border: none;
   border-radius: 4px;
@@ -91,11 +99,62 @@ button {
 }
 
 button:hover {
-  background-color: #45a049;
+  background-color: #36a473;
 }
 
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+/* [추가된 스타일] */
+.social-login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #aaa;
+  margin: 20px 0;
+}
+
+.social-login-divider::before,
+.social-login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+
+.social-login-divider:not(:empty)::before {
+  margin-right: 0.25em;
+}
+
+.social-login-divider:not(:empty)::after {
+  margin-left: 0.25em;
+}
+
+.google-login-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  box-sizing: border-box; /* padding이 너비에 포함되도록 설정 */
+}
+
+.google-login-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.google-login-btn img {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
 }
 </style>

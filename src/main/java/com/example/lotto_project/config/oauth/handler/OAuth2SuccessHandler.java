@@ -6,10 +6,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
@@ -32,11 +34,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     String accessToken = jwtUtil.createAccessToken(email);
     String refreshToken = jwtUtil.createRefreshToken(email);
 
-    //4. 사용자의 브라우저를 특정 주소로 리디렉션 시킴
-    //TODO: 지금은 프론트엔드가 없으므로, 토큰을 쿼리 파라미터로 붙여서 가상의 주소로 보냄.
-    //      프론트엔드 개발할때 이 주소에서 토큰들을 파싱하여 안전하게 저장.
-    httpServletResponse.sendRedirect(
-        "http://localhost:3000/oauth-redirect?accessToken=" + accessToken + "&refreshToken="
-            + refreshToken);
+    //4. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
+    String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/oauth2/redirect")
+        .queryParam("accessToken", accessToken)
+        .queryParam("refreshToken", refreshToken)
+        .build()
+        .encode(StandardCharsets.UTF_8)
+        .toUriString();
+    
+    //5. 생성된 URL로 사용자를 리디렉션
+    httpServletResponse.sendRedirect(targetUrl);
   }
 }

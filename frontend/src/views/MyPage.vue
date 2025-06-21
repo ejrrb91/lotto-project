@@ -74,7 +74,8 @@ const formatDate = (dateString) => {
 
       <hr />
 
-      <h2>나의 추천 기록</h2>
+      <h2 v-if="responseData.round">{{ responseData.round }}회차 추천 결과</h2>
+      <h2 v-else>나의 추천 기록</h2>
 
       <div
         v-if="!responseData.myRecommendations || responseData.myRecommendations.length === 0"

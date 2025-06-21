@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class RecommendationService {
   }
 
   /**
-   * 과거 통계를 기반으로 가장 많이 나온 번호 6개를 추천하고, DB에 저장
+   * 과거 통계를 기반으로 가장 많이 나온 번호 6개를 추천하고, DB에 저장.
    *
    * @param userId
    * @return List<Integer>, 6개의 로또 번호 리스트
@@ -136,6 +137,147 @@ public class RecommendationService {
     return recommendedNumbers;
   }
 
+
+  /**
+   * 최근 5주간 미출현 번호에 가중치 부여하여 번호 6개를 추천하고, DB에 저장
+   *
+   * @param userId
+   * @return List<Integer>, 6개의 로또 번호 리스트
+   */
+  @Transactional
+  public List<Integer> recommendInfrequentNumbers(Long userId) {
+    //1. DB에서 가장 최신회차 5개의 데이터 추출
+    List<LottoRound> recentRounds = lottoRoundRepository.findTop5ByOrderByRoundDesc();
+
+    //2. 5주간의 모든 당첨 번호를 중복 없이 Set에 저장
+    Set<Integer> recentWinningNumbers = new HashSet<>();
+
+    //3. 가중치가 부여된 RaffleBox 생성
+    for (LottoRound lottoRound : recentRounds) {
+      recentWinningNumbers.addAll(
+          List.of(lottoRound.getWinNum1(), lottoRound.getWinNum2(), lottoRound.getWinNum3(),
+              lottoRound.getWinNum4(), lottoRound.getWinNum5(), lottoRound.getWinNum6()));
+    }
+
+    List<Integer> raffleBox = new ArrayList<>();
+
+    for (int i = 0; i <= 45; i++) {
+      if (recentWinningNumbers.contains(i)) {
+        //최근에 나왔을 경우 (가중치 1)
+        raffleBox.add(i);
+      } else {
+        //최근에 안나왔을 경우 (가중치 3)
+        raffleBox.add(i);
+        raffleBox.add(i);
+        raffleBox.add(i);
+      }
+    }
+    return drawNumbersFromRaffleBox(raffleBox, userId, AlgorithmType.INFREQUENT);
+  }
+
+  /**
+   * 전체 기간 동안 가장 적게 나온 번호에 가중치를 부여하여 번호 6개를 추천하고, DB에 저장
+   *
+   * @param userId
+   * @return List<Integer>, 6개의 로또 번호 리스트
+   */
+  @Transactional
+  public List<Integer> recommendRareNumbers(Long userId) {
+    //1. DB에서 모든 회차 정보를 조회하여 번호별로 출현 빈도 계산
+    List<LottoRound> allRounds = lottoRoundRepository.findAll();
+    Map<Integer, Integer> numbersFrequency = getNumberFrequency(allRounds);
+
+    //2. 가장 많이 나온 번호의 횟수를 찾음
+    List<Integer> raffleBox = new ArrayList<>();
+    int maxFrequency = numbersFrequency.isEmpty() ? 0 : Collections.max(numbersFrequency.values());
+
+    //3. 희귀한 정도에 따라서 가중치가 부여된 RaffleBox 생성
+    for (int i = 0; i <= 45; i++) {
+      int frequency = numbersFrequency.getOrDefault(i, 0);
+      int weight = maxFrequency - frequency; //나온 횟수가 적을 수록 가중치가 높아짐.
+
+      for (int j = 0; j < weight; j++) {
+        raffleBox.add(i);
+      }
+      //모든 번호가 최소 1번은 포함 되어야 함
+      raffleBox.add(i);
+    }
+    //4. RaffleBox에서 6개의 번호를 추출하여 저장한 뒤 반환
+    return drawNumbersFromRaffleBox(raffleBox, userId, AlgorithmType.RARE_NUMBER);
+  }
+
+  /**
+   * 최근 6개월간 3번 이상 나온 번호들 중에서 무작위로 번호 6개를 추천하고, DB에 저장
+   *
+   * @param userId
+   * @return List<Integer>, 6개의 로또 번호 리스트
+   */
+  @Transactional
+  public List<Integer> recommendRecentSixMonthsNumbers(Long userId) {
+    //1. 오늘 날짜로 부터 6개월 전 날짜 계산
+    LocalDate sixMonthsAgo = LocalDate.now().minusMonths(6);
+
+    //2. 6개월 간의 데이터를 DB에서 조회
+    List<LottoRound> recentRounds = lottoRoundRepository.findByDrawDateAfter(sixMonthsAgo);
+    Map<Integer, Integer> numbersFrequency = getNumberFrequency(recentRounds);
+
+    //3. 3번 이상 당첨된 번호들만 필터링 하여 리스트에 담음
+    List<Integer> frequencyNumbers = new ArrayList<>();
+    for (Map.Entry<Integer, Integer> entry : numbersFrequency.entrySet()) {
+      if (entry.getValue() >= 3) {
+        frequencyNumbers.add(entry.getKey());
+      }
+    }
+
+    //4. 3번 이상 당첨된 번호가 6개 미만일 경우, 그냥 랜덤으로 추천
+    if (frequencyNumbers.size() < 6) {
+      return recommendRandomNumbers(userId);
+    }
+
+    //5. 필터링 된 번호 중, 6개를 무작위로 선택 후, 정렬하여 저장한 뒤 반환
+    Collections.shuffle(frequencyNumbers);
+    List<Integer> recommendedNumbers = new ArrayList<>(frequencyNumbers.subList(0, 6));
+    recommendedNumbers.sort(Comparator.naturalOrder());
+    saveRecommendation(userId, AlgorithmType.RECENT_6_MONTH, recommendedNumbers);
+    return recommendedNumbers;
+  }
+
+  /**
+   * 홀수 3개, 짝수 3개를 맞춰서 번호 6개를 추천하고, DB에 저장
+   *
+   * @param userId
+   * @return List<Integer>, 6개의 로또 번호 리스트
+   */
+  @Transactional
+  public List<Integer> recommendOddEvenRatioNumbers(Long userId) {
+    List<Integer> oddNumbers = new ArrayList<>();
+    List<Integer> evenNumbers = new ArrayList<>();
+
+    //1. 1 ~ 45번을 홀수 그룹과 짝수 그룹으로 나눔
+    for (int i = 1; i <= 45; i++) {
+      if (i % 2 == 0) {
+        evenNumbers.add(i);
+      } else {
+        oddNumbers.add(i);
+      }
+    }
+
+    //2. 각 그룹의 숫자 목록을 무작위로 섞음
+    Collections.shuffle(oddNumbers);
+    Collections.shuffle(evenNumbers);
+
+    //3. 홀수 3개, 짝수 3개를 각 그룹에서 추출하여 조합
+    List<Integer> recommendedNumbers = new ArrayList<>();
+    recommendedNumbers.addAll(oddNumbers.subList(0, 3));
+    recommendedNumbers.addAll(evenNumbers.subList(0, 3));
+
+    //4. 최종 6개 번호를 정렬하고, 저장한 뒤 반환
+    recommendedNumbers.sort(Comparator.naturalOrder());
+    saveRecommendation(userId, AlgorithmType.ODD_EVEV_RATIO, recommendedNumbers);
+    return recommendedNumbers;
+  }
+
+
   /**
    * Map에서 특정 번호의 카운트를 1씩 증가
    *
@@ -183,6 +325,12 @@ public class RecommendationService {
     recommendationRepository.save(recommendation);
   }
 
+  /**
+   * 추천 받은 번호 조회
+   *
+   * @param userId
+   * @return
+   */
   @Transactional(readOnly = true)
   public MyPageResponseDto getMyRecommendations(Long userId) {
     //1. 최신 당첨 번호 조회(데이터가 없을 경우 null 처리)
@@ -206,5 +354,53 @@ public class RecommendationService {
       recommendationResponseDtos.add(recommendationResponseDto);
     }
     return new MyPageResponseDto(latestRound, recommendationResponseDtos);
+  }
+
+  /**
+   * 여러 회차 정보로부터 번호별 출현 빈도 계싼
+   *
+   * @param lottoRounds
+   * @return 번호를 Key로, 출현 횟수를 Value로 갖는 Map
+   */
+  private Map<Integer, Integer> getNumberFrequency(List<LottoRound> lottoRounds) {
+
+    Map<Integer, Integer> frequencyMap = new HashMap<>();
+
+    for (LottoRound lottoRound : lottoRounds) {
+      updateFrequency(frequencyMap, lottoRound.getWinNum1());
+      updateFrequency(frequencyMap, lottoRound.getWinNum2());
+      updateFrequency(frequencyMap, lottoRound.getWinNum3());
+      updateFrequency(frequencyMap, lottoRound.getWinNum4());
+      updateFrequency(frequencyMap, lottoRound.getWinNum5());
+      updateFrequency(frequencyMap, lottoRound.getWinNum6());
+    }
+    return frequencyMap;
+  }
+
+  /**
+   * 가중치가 적용된 raffleBox에서 중복되지 않게 6개의 번호를 추출
+   *
+   * @param raffleBox
+   * @param userId
+   * @param type
+   * @return List<Integer>, 6개의 로또 번호 리스트
+   */
+  private List<Integer> drawNumbersFromRaffleBox(List<Integer> raffleBox, Long userId,
+      AlgorithmType type) {
+    Collections.shuffle(raffleBox);
+    Set<Integer> uniqueNumbers = new LinkedHashSet<>();
+    int index = 0;
+    while (uniqueNumbers.size() < 6) {
+      if (index >= raffleBox.size()) {
+        break;
+      }
+      uniqueNumbers.add(raffleBox.get(index));
+      index++;
+    }
+
+    List<Integer> recommendedNumbers = new ArrayList<>(uniqueNumbers);
+    recommendedNumbers.sort(Comparator.naturalOrder());
+    saveRecommendation(userId, type, recommendedNumbers);
+    return recommendedNumbers;
   }
 }
