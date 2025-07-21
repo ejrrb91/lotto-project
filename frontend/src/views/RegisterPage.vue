@@ -57,6 +57,10 @@ const submitForm = () => {
         {{ isPending ? '가입 처리 중 입니다.' : '가입하기' }}
       </button>
     </form>
+    <div class="login-link">
+      이미 계정이 있으신가요?
+      <router-link to="/login">로그인</router-link>
+    </div>
   </div>
 </template>
 
@@ -98,5 +102,21 @@ button {
 
 button:hover {
   background-color: #369f70;
+}
+
+.login-link {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.login-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
 }
 </style>

@@ -11,6 +11,6 @@ public interface RecommendationRepository extends JpaRepository<Recommendation, 
   //lottoRound를 기준으로 모든 추천 기록을 찾는 메서드
   List<Recommendation> findAllByLottoRound(int lottoRound);
 
-  //특정 사용자, 특정 회차에 대한 추천 기록을 ID 역순으로 조회
-  List<Recommendation> findByUserIdAndLottoRoundOrderByIdDesc(Long userId, Integer latestRound);
+  //특정 사용자 대한 추천 기록을 ID 역순으로 조회
+  List<Recommendation> findByUserIdOrderByIdDesc(Long userId);
 }

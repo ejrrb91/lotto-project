@@ -26,21 +26,49 @@ const isWinningNumber = (number, winningNumbers) => {
 }
 
 //날짜 형식을 'YYYY-MM-DD HH:mm' 형식으로 바꾸는 함수
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
+// const formatDate = (dateString) => {
+//   const date = new Date(dateString)
+//
+//   // 'ko-KR' 로케일에 맞는 짧은 날짜와 시간 형식으로 변환.
+//   // 예시 출력: "24. 6. 20. 오후 11:53"
+//   return date.toLocaleString('ko-KR', {
+//     dateStyle: 'short',
+//     timeStyle: 'short',
+//   })
+// }
 
-  // 'ko-KR' 로케일에 맞는 짧은 날짜와 시간 형식으로 변환.
-  // 예시 출력: "24. 6. 20. 오후 11:53"
-  return date.toLocaleString('ko-KR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
+const translateAlgorithmType = (type) => {
+  switch (type) {
+    case 'RANDOM':
+      return '랜덤 번호 추천'
+    case 'STATISTICS':
+      return '통계 기반 번호 추천'
+    case 'INFREQUENT':
+      return '최근 미출현 번호 추천'
+    case 'RARE_NUMBER':
+      return '희귀 번호 추천'
+    case 'RECENT_6_MONTH':
+      return '6개월 분석 번호 추천'
+    case 'ODD_EVEN_RATIO':
+      return '홀/짝 조합 번호 추천'
+    default:
+      return type
+  }
+}
+
+const getNumberClass = (number, recommendation, data) => {
+  const isBonus = recommendation.isBonusMatched && number === data.bonusNumber
+  return {
+    ball: true,
+    'winning-rec': isWinningNumber(number, data.latestWinningNumbers) && !isBonus,
+    'bonus-rec': isBonus,
+  }
 }
 </script>
 
 <template>
   <div class="mypage-container">
-    <h1>마이페이지</h1>
+    <h1>나의 추천 기록</h1>
 
     <div v-if="isLoading" class="loading-state">
       <p>데이터를 불러오는 중입니다.</p>
@@ -74,8 +102,7 @@ const formatDate = (dateString) => {
 
       <hr />
 
-      <h2 v-if="responseData.round">{{ responseData.round }}회차 추천 결과</h2>
-      <h2 v-else>나의 추천 기록</h2>
+      <h2>나의 추천 기록</h2>
 
       <div
         v-if="!responseData.myRecommendations || responseData.myRecommendations.length === 0"
@@ -86,7 +113,7 @@ const formatDate = (dateString) => {
       <table v-else class="recommendation-table">
         <thead>
           <tr>
-            <th>추천일시</th>
+            <th>추천회차</th>
             <th>추천방식</th>
             <th>추천번호</th>
             <th>일치하는 개수</th>
@@ -94,56 +121,23 @@ const formatDate = (dateString) => {
         </thead>
         <tbody>
           <tr v-for="rec in responseData.myRecommendations" :key="rec.id">
-            <td>{{ formatDate(rec.recommendedAt) }}</td>
-            <td>{{ rec.algorithmType }}</td>
+            <td>{{ rec.lottoRound }}</td>
+            <td>{{ translateAlgorithmType(rec.algorithmType) }}</td>
             <td class="number-cell">
-              <span
-                :class="{
-                  ball: true,
-                  'winning-rec': isWinningNumber(rec.num1, responseData.latestWinningNumbers),
-                }"
-                >{{ rec.num1 }}</span
-              >
-              <span
-                :class="{
-                  ball: true,
-                  'winning-rec': isWinningNumber(rec.num2, responseData.latestWinningNumbers),
-                }"
-                >{{ rec.num2 }}</span
-              >
-              <span
-                :class="{
-                  ball: true,
-                  'winning-rec': isWinningNumber(rec.num3, responseData.latestWinningNumbers),
-                }"
-                >{{ rec.num3 }}</span
-              >
-              <span
-                :class="{
-                  ball: true,
-                  'winning-rec': isWinningNumber(rec.num4, responseData.latestWinningNumbers),
-                }"
-                >{{ rec.num4 }}</span
-              >
-              <span
-                :class="{
-                  ball: true,
-                  'winning-rec': isWinningNumber(rec.num5, responseData.latestWinningNumbers),
-                }"
-                >{{ rec.num5 }}</span
-              >
-              <span
-                :class="{
-                  ball: true,
-                  'winning-rec': isWinningNumber(rec.num6, responseData.latestWinningNumbers),
-                }"
-                >{{ rec.num6 }}</span
-              >
+              <span :class="getNumberClass(rec.num1, rec, responseData)"> {{ rec.num1 }}</span>
+              <span :class="getNumberClass(rec.num2, rec, responseData)"> {{ rec.num2 }}</span>
+              <span :class="getNumberClass(rec.num3, rec, responseData)"> {{ rec.num3 }}</span>
+              <span :class="getNumberClass(rec.num4, rec, responseData)"> {{ rec.num4 }}</span>
+              <span :class="getNumberClass(rec.num5, rec, responseData)"> {{ rec.num5 }}</span>
+              <span :class="getNumberClass(rec.num6, rec, responseData)"> {{ rec.num6 }}</span>
             </td>
-            <td v-if="rec.matchCount !== null">
-              <strong>{{ rec.matchCount }}개</strong>
+            <td>
+              <div v-if="rec.rank">
+                <strong>{{ rec.rank }}</strong>
+                <span v-if="rec.matchCount != null"> ({{ rec.matchCount }}개 일치)</span>
+              </div>
+              <div v-else>추첨 전</div>
             </td>
-            <td v-else>-</td>
           </tr>
         </tbody>
       </table>
@@ -256,6 +250,12 @@ tr:nth-child(even) {
 }
 
 .ball.bonus {
-  background-color: #ffc107; /* 보너스 번호 색깔 (노란 계열) */
+  background-color: #ffc107;
+}
+
+.ball.bonus-rec {
+  background-color: #ffc107;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
 }
 </style>

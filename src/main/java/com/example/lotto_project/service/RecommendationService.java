@@ -341,9 +341,9 @@ public class RecommendationService {
       return new MyPageResponseDto(null, List.of());
     }
 
-    //3. 가장 최신 회차 번호를 기준으로, 해당 회차에 대한 나의 추천 기록만 조회
-    List<Recommendation> recommendations = recommendationRepository.findByUserIdAndLottoRoundOrderByIdDesc(
-        userId, latestRound.getRound());
+    //3. 사용자의 모든 추천 기록을 가져옴.
+    List<Recommendation> recommendations = recommendationRepository.findByUserIdOrderByIdDesc(
+        userId);
 
     //4. 추천 기록(Entity) 목록을 DTO 목록으로 변환
     List<RecommendationResponseDto> recommendationResponseDtos = new ArrayList<>();
@@ -351,6 +351,16 @@ public class RecommendationService {
     for (Recommendation recommendation : recommendations) {
       RecommendationResponseDto recommendationResponseDto = new RecommendationResponseDto(
           recommendation);
+      //등수 계산 로직
+      Integer matchCount = recommendation.getMatchCount();
+      //추천 기록의 회차가 아직 추첨 전이면 matchCount가 null일 수 있음.
+      if (matchCount != null) {
+        Boolean isBonusMatched = recommendation.getIsBonusMatched();
+        String rank = calculateRank(matchCount, isBonusMatched);
+        recommendationResponseDto.setRank(rank);
+      } else {
+        recommendationResponseDto.setRank("추첨 전");
+      }
       recommendationResponseDtos.add(recommendationResponseDto);
     }
     return new MyPageResponseDto(latestRound, recommendationResponseDtos);
@@ -402,5 +412,24 @@ public class RecommendationService {
     recommendedNumbers.sort(Comparator.naturalOrder());
     saveRecommendation(userId, type, recommendedNumbers);
     return recommendedNumbers;
+  }
+
+  /**
+   * 로또 등수 계산 로직
+   */
+  private String calculateRank(int matchCount, Boolean isBonusMatched) {
+    if (matchCount == 6) {
+      return "1등";
+    } else if (matchCount == 5 && isBonusMatched != null && isBonusMatched) {
+      return "2등";
+    } else if (matchCount == 5) {
+      return "3등";
+    } else if (matchCount == 4) {
+      return "4등";
+    } else if (matchCount == 3) {
+      return "5등";
+    } else {
+      return "낙첨";
+    }
   }
 }

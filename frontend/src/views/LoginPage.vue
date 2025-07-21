@@ -50,7 +50,6 @@ const submitForm = () => {
         {{ isPending ? '로그인 중...' : '로그인' }}
       </button>
     </form>
-
     <div class="social-login-divider">
       <span>또는</span>
     </div>
@@ -59,6 +58,10 @@ const submitForm = () => {
       <img src="/google-logo.svg" alt="Google logo" />
       <span>Login with Google</span>
     </a>
+    <div class="register-link">
+      계정이 없으신가요?
+      <router-link to="/register">회원가입</router-link>
+    </div>
   </div>
 </template>
 
@@ -156,5 +159,21 @@ button:disabled {
   width: 20px;
   height: 20px;
   margin-right: 10px;
+}
+
+.register-link {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.register-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
 }
 </style>

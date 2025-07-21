@@ -41,31 +41,36 @@ public class JwtUtil {
   }
 
   /**
-   * 이메일을 받아서 AccessToken을 생성
+   * 이메일과 닉네임을 받아서 AccessToken을 생성
+   *
    * @param email
+   * @param nickname
    * @return AccessToken
    */
-  public String createAccessToken(String email) {
-    return createToken(email, ACCESS_TOKEN_EXPIRATION_TIME);
+  public String createAccessToken(String email, String nickname) {
+    return createToken(email, nickname, ACCESS_TOKEN_EXPIRATION_TIME);
   }
 
   /**
-   * 이메일을 받아서 RefreshToken을 생성
+   * 이메일과 닉네임을 받아서 RefreshToken을 생성
+   *
    * @param email
    * @return RefreshToken
    */
-  public String createRefreshToken(String email) {
-    return createToken(email, REFRESH_TOKEN_EXPIRATION_TIME);
+  public String createRefreshToken(String email, String nickname) {
+    return createToken(email, nickname, REFRESH_TOKEN_EXPIRATION_TIME);
   }
 
   /**
    * JWT 토큰 생성
+   *
    * @param email
+   * @param nickname
    * @param expirationTime
    * @return JWT 토큰
    */
 
-  private String createToken(String email, long expirationTime) {
+  private String createToken(String email, String nickname, long expirationTime) {
 
     //현재 시간
     Date now = new Date();
@@ -75,6 +80,7 @@ public class JwtUtil {
 
     return Jwts.builder()
         .setSubject(email) //토큰의 주체로 이메일을 설정
+        .claim("nickname", nickname) //"nickname"이라는 이름으로 값을 추가
         .setIssuedAt(now) //토큰 발급 시간
         .setExpiration(expirationDate) //토큰 만료 시간
         .signWith(key, signatureAlgorithm) //사용할 암호화 알고리즘과 비밀키
@@ -83,6 +89,7 @@ public class JwtUtil {
 
   /**
    * JWT 토큰을 검증
+   *
    * @param token
    * @return
    */

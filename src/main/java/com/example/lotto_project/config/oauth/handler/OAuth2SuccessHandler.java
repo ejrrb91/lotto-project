@@ -29,10 +29,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     //2. 사용자 정보에서 이메일을 추출
     String email = userDetails.getUsername();
+    String nickname = userDetails.getNickname();
 
     //3.JwtUtil을 사용하여 AccessToken과 RefreshToken을 생성
-    String accessToken = jwtUtil.createAccessToken(email);
-    String refreshToken = jwtUtil.createRefreshToken(email);
+    String accessToken = jwtUtil.createAccessToken(email, nickname);
+    String refreshToken = jwtUtil.createRefreshToken(email, nickname);
 
     //4. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
     String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/oauth2/redirect")
@@ -41,7 +42,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         .build()
         .encode(StandardCharsets.UTF_8)
         .toUriString();
-    
+
     //5. 생성된 URL로 사용자를 리디렉션
     httpServletResponse.sendRedirect(targetUrl);
   }

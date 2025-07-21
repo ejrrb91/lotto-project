@@ -40,6 +40,10 @@ public class UserDetailsImpl implements UserDetails, OAuth2User {
     return user.getEmail();
   }
 
+  public String getNickname() {
+    return user.getNickname();
+  }
+
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     //TODO : 지금은 사용자 권한(Role)을 사용하지 않으므로, 빈 리스트를 반환, 추후 수정 예정

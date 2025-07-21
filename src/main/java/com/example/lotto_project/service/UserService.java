@@ -37,6 +37,7 @@ public class UserService {
 
   /**
    * 로그인을 처리하는 메서드
+   *
    * @param loginRequestDto
    * @return
    */
@@ -55,8 +56,8 @@ public class UserService {
     }
 
     //3. 인증이 성공하면, AccessToken, RefreshToken을 생성.
-    String accessToken = jwtUtil.createAccessToken(user.getEmail());
-    String refreshToken = jwtUtil.createRefreshToken(user.getEmail());
+    String accessToken = jwtUtil.createAccessToken(user.getEmail(), user.getNickname());
+    String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getNickname());
 
     //4. AccessToken, RefreshToken을 DTO에 담아 리턴
     return new TokenResponseDto(accessToken, refreshToken);
