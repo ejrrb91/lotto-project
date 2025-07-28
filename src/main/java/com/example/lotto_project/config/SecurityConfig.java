@@ -79,7 +79,9 @@ public class SecurityConfig {
         .requestMatchers("/api/users/reissue").permitAll()
         // "/api/recommend/**": 추천 API는 인증된 사용자만 접근
         .requestMatchers("/api/recommend/**").authenticated()
-        // .anyRequest().authenticated(): 위에서 정의한 경로 이외의 모든 요청은 반드시 인증(로그인)된 사용자만 접근할 수 있도록 설정.
+        // "/api/users/logout" 로그아웃 API는 인증된 사용자만 접근 가능
+        .requestMatchers("/api/users/logout").authenticated()
+        // 위에서 정의한 경로 이외의 모든 요청은 반드시 인증(로그인)된 사용자만 접근할 수 있도록 설정.
         // 이 규칙은 항상 가장 마지막에 위치해야함.
         .anyRequest().authenticated()
     );

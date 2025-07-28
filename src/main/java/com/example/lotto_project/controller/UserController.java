@@ -51,4 +51,15 @@ public class UserController {
 
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
   }
+
+  @PostMapping("/logout")
+  public ResponseEntity<String> logout(HttpServletRequest httpServletRequest) {
+    String bearerToken = httpServletRequest.getHeader("Authorization");
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+      String accessToken = bearerToken.substring(7);
+      userService.logout(accessToken);
+      return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
+    return ResponseEntity.badRequest().body("잘못된 요청입니다.");
+  }
 }

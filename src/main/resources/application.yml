@@ -1,3 +1,4 @@
+#Default Profile
 spring:
   profiles:
     active: local
@@ -31,10 +32,22 @@ spring:
       client:
         registration:
           google:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
             scope:
               - email
               - profile
 
+---
+#Docker Profile
+spring:
+  config:
+    activate:
+      on-profile: "docker"
+  data:
+    redis:
+      host: redis #Docker 환경에서는 'redis' 컨테이너를 바라봄
+      port: 6379
 
 # 로깅 레벨 설정 (JPA 쿼리 파라미터 값도 로그로 보려면)
 logging:

@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth.js'
 
 //axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080',
+  //baseURL: 'http://localhost:8080',
   headers: {
     'Content-Type': 'application/json',
   },

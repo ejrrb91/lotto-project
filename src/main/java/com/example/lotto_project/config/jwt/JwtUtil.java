@@ -29,7 +29,7 @@ public class JwtUtil {
   private final long ACCESS_TOKEN_EXPIRATION_TIME = 24 * 60 * 60 * 1000L;
 
   //Refresh Token의 만료시간(7일)
-  private final long REFRESH_TOKEN_EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000L;
+  public static final long REFRESH_TOKEN_EXPIRATION_TIME = 7 * 24 * 60 * 60 * 1000L;
 
   //JWT 서명에 사용할 키 객체
   private Key key;

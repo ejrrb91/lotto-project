@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { jwtDecode } from 'jwt-decode'
 import router from '@/router/index.js'
+import apiClient from '@/api/axios.js'
 
 //auth라는 이름의 store를 정의
 export const useAuthStore = defineStore('auth', () => {
@@ -31,13 +32,23 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('accessToken', newRefreshToken)
   }
 
-  function logout() {
-    accessToken.value = null
-    refreshToken.value = null
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    alert('로그아웃 되었습니다.')
-    router.push('/')
+  async function logout() {
+    try {
+      //1. 백엔드에 로그아웃 요청을 보내 Redis의 RefreshToken 삭제를 시도
+      await apiClient.post('/api/users/logout')
+      console.log('서버 측 로그아웃 성공')
+    } catch (error) {
+      //2. 서버와의 통신이 실패하더라도 프론트엔드에서는 로그아웃 처리를 진행
+      console.log('서버 측 로그아웃 실패')
+    } finally {
+      //3. API 호출 성공 여부와 관계없이 브라우저의 상태와 저장소는 정리
+      accessToken.value = null
+      refreshToken.value = null
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      alert('로그아웃 되었습니다.')
+      router.push('/')
+    }
   }
 
   // Action: 로그아웃 시 토큰 상태와 user를 localStorage에서 모두 제거하는 함수
@@ -61,8 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
         //토큰 만료 시간 확인
         const currentTime = Date.now() / 1000
         if (decoded.exp < currentTime) {
-          console.error('토큰이 만료되었습니다. 로그아웃합니다.')
-          logout()
+          //AccessToken이 만료되었을 뿐, 자동 재발급 로직이 처리하므로 여기서는 logout() 호출 X
         }
       } catch (error) {
         console.error('유효하지 않은 토큰입니다. 강제 로그아웃합니다.', error)
