@@ -48,7 +48,7 @@ apiClient.interceptors.response.use(
       try {
         //저장된 refreshToken으로 새로운 accessToken 요청
         const response = await axios.post(
-          'http://localhost:8080/api/users/reissue',
+          '/api/users/reissue',
           {},
           { headers: { Authorization: `Bearer ${authStore.refreshToken}` } },
         )

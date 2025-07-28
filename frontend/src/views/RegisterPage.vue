@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useMutation } from '@tanstack/vue-query'
+import apiClient from '@/api/axios.js'
 
 const email = ref('')
 const password = ref('')
@@ -13,7 +14,7 @@ const router = useRouter()
 const { mutate, isPending } = useMutation({
   //mutationFn은 실제 비동기 작업을 수행하는 함수
   //axios를 이용해 회원가입 API를 호출
-  mutationFn: (userData) => axios.post('http://localhost:8080/api/users/register', userData),
+  mutationFn: (userData) => apiClient.post('/api/users/register', userData),
   //성공적으로 완료 되었을 때 실행
   onSuccess: () => {
     alert('회원가입에 성공했습니다. 로그인 페이지로 이동합니다.')

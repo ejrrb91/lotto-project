@@ -54,7 +54,7 @@ const submitForm = () => {
       <span>또는</span>
     </div>
 
-    <a href="http://localhost:8080/oauth2/authorization/google" class="google-login-btn">
+    <a href="/oauth2/authorization/google" class="google-login-btn">
       <img src="/google-logo.svg" alt="Google logo" />
       <span>Login with Google</span>
     </a>

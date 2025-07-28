@@ -152,7 +152,7 @@ const connect = () => {
   if (!chatUsername.value || !roomId.value) {
     return
   }
-  const socket = new SockJS('http://localhost:8080/ws')
+  const socket = new SockJS('/ws')
   stompClient = new Client({
     webSocketFactory: () => socket,
     reconnectDelay: 5000,
