@@ -27,10 +27,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletResponse httpServletResponse, FilterChain filterChain)
       throws ServletException, IOException {
 
-    //1. 요청 헤더에서 JWT 토큰을 가져옴
+    //1. 토큰 재발급인 경우 해당 필터 건너 뜀
+    if (httpServletRequest.getRequestURI().equals("/api/users/reissue")) {
+      filterChain.doFilter(httpServletRequest, httpServletResponse);
+      return;
+    }
+
+    //2. 요청 헤더에서 JWT 토큰을 가져옴
     String token = resolveTokenFromHttpServletRequest(httpServletRequest);
 
-    //2. 토큰이 유요한 경우
+    //3. 토큰이 유요한 경우
     if (StringUtils.hasText(token) && jwtUtil.validationToken(token)) {
       //토큰에서 사용자 이메일을 가져와서 DB에서 조회
       String email = jwtUtil.getEmailFromToken(token);

@@ -75,10 +75,10 @@ public class SecurityConfig {
         // "/oauth2/**": 소셜 로그인 프로세스를 위한 경로이므로, 누구나 접근을 허용.
         // "/api/main-page": 메인 페이지 데이터는 로그인하지 않은 사용자도 볼 수 있으므로, 누구나 접근을 허용.
         .requestMatchers("/ws/**", "/api/users/**", "/oauth2/**", "/api/main-page").permitAll()
-
-        // "/api/recommend/**" 경로: 로또 번호 추천 기능은 인증된 사용자만 사용할 수 있도록 설정.
+        // "/api/users/reissue": 토큰 재발급 경로는 모두 허용
+        .requestMatchers("/api/users/reissue").permitAll()
+        // "/api/recommend/**": 추천 API는 인증된 사용자만 접근
         .requestMatchers("/api/recommend/**").authenticated()
-
         // .anyRequest().authenticated(): 위에서 정의한 경로 이외의 모든 요청은 반드시 인증(로그인)된 사용자만 접근할 수 있도록 설정.
         // 이 규칙은 항상 가장 마지막에 위치해야함.
         .anyRequest().authenticated()

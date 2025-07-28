@@ -1,17 +1,22 @@
 package com.example.lotto_project.config.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component //ㄷㅏ른 곳에서 주입해서 쓸 수 있도록 Spring Been으로 등록.
+@Slf4j
 public class JwtUtil {
 
   //JWT 생성 및 검증에 사용될 SECRET_KEY, 외부 노출 금지
@@ -93,15 +98,23 @@ public class JwtUtil {
    * @param token
    * @return
    */
+
   public boolean validationToken(String token) {
     try {
-      //Jwts.parseBuilder를 사용해 토큰을 파싱하고 서명을 검증.
-      //서명이 유효하지 않거나 토큰이 만료되었을 경우 Exception 발생.
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
       return true;
-    } catch (Exception e) {
-      return false;
+    } catch (SecurityException | MalformedJwtException e) {
+      log.error("유효하지 않은 JWT 서명입니다.", e);
+    } catch (ExpiredJwtException e) {
+      log.error("만료된 JWT 토큰입니다.", e);
+    } catch (UnsupportedJwtException e) {
+      log.error("지원되지 않는 JWT 토큰입니다.", e);
+    } catch (IllegalArgumentException e) {
+      log.error("JWT 토큰이 잘못되었습니다.", e);
+    } catch (Exception e) { // [추가] 예상치 못한 모든 종류의 에러를 잡습니다.
+      log.error("토큰 검증 중 알 수 없는 오류가 발생했습니다.", e);
     }
+    return false;
   }
 
   public String getEmailFromToken(String token) {

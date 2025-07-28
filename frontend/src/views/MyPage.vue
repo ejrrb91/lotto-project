@@ -56,11 +56,11 @@ const translateAlgorithmType = (type) => {
   }
 }
 
-const getNumberClass = (number, recommendation, data) => {
-  const isBonus = recommendation.isBonusMatched && number === data.bonusNumber
+const getNumberClass = (number, recommendation) => {
+  const isBonus = recommendation.isBonusMatched && number === recommendation.bonusNumber
   return {
     ball: true,
-    'winning-rec': isWinningNumber(number, data.latestWinningNumbers) && !isBonus,
+    'winning-rec': isWinningNumber(number, recommendation.winningNumbers) && !isBonus,
     'bonus-rec': isBonus,
   }
 }
@@ -121,7 +121,7 @@ const getNumberClass = (number, recommendation, data) => {
         </thead>
         <tbody>
           <tr v-for="rec in responseData.myRecommendations" :key="rec.id">
-            <td>{{ rec.lottoRound }}</td>
+            <td>{{ rec.lottoRound }}회차</td>
             <td>{{ translateAlgorithmType(rec.algorithmType) }}</td>
             <td class="number-cell">
               <span :class="getNumberClass(rec.num1, rec, responseData)"> {{ rec.num1 }}</span>

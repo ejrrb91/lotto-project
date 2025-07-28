@@ -3,16 +3,18 @@ package com.example.lotto_project.service;
 import com.example.lotto_project.config.jwt.JwtUtil;
 import com.example.lotto_project.domain.User;
 import com.example.lotto_project.dto.LoginRequestDto;
-import com.example.lotto_project.dto.TokenResponseDto;
+import com.example.lotto_project.dto.TokenDto;
 import com.example.lotto_project.dto.UserRegisterRequestDto;
 import com.example.lotto_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
   private final UserRepository userRepository;
@@ -42,8 +44,7 @@ public class UserService {
    * @return
    */
   @Transactional(readOnly = true) //조회만 하는 작업이므로 readOnly = true로 설정
-  public TokenResponseDto login(LoginRequestDto loginRequestDto) {
-
+  public TokenDto login(LoginRequestDto loginRequestDto) {
     //1. 이메일을 기준으로 사용자를 DB에서 조회.
     User user = userRepository.findByEmail(loginRequestDto.getEmail())
         //사용자가 없을 경우 예외 발생
@@ -60,6 +61,36 @@ public class UserService {
     String refreshToken = jwtUtil.createRefreshToken(user.getEmail(), user.getNickname());
 
     //4. AccessToken, RefreshToken을 DTO에 담아 리턴
-    return new TokenResponseDto(accessToken, refreshToken);
+    return new TokenDto(accessToken, refreshToken);
   }
+
+  /**
+   * 전달받은 RefreshToken을 검증하고, 새로운 AccessToken을 발급하는 메서드
+   *
+   * @param refreshToken
+   * @return
+   */
+  @Transactional
+  public TokenDto reissueToken(String refreshToken) {
+    //1. RefreshToken 유효성 검증
+    if (!jwtUtil.validationToken(refreshToken)) {
+      throw new IllegalArgumentException("유효하지 않은 RefreshToken 입니다.");
+    }
+
+    //2. RefreshToken에서 사용자정보(email) 추출
+    String email = jwtUtil.getEmailFromToken(refreshToken);
+
+    //3. DB에서 사용자 정보를 찾아 NickName 추출
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new IllegalArgumentException("해당 메일의 사용자를 찾을 수 없습니다."));
+
+    String nickName = user.getNickname();
+
+    //4. 새로운 AccessToken 생성
+    String newAccessToken = jwtUtil.createAccessToken(email, nickName);
+
+    //5. 새로운 AccessToken을 TokenDto에 담아 리턴(RefreshToken은 그대로 사용)
+    return new TokenDto(newAccessToken, refreshToken);
+  }
+
 }

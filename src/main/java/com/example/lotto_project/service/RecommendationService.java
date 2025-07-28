@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -273,7 +274,7 @@ public class RecommendationService {
 
     //4. 최종 6개 번호를 정렬하고, 저장한 뒤 반환
     recommendedNumbers.sort(Comparator.naturalOrder());
-    saveRecommendation(userId, AlgorithmType.ODD_EVEV_RATIO, recommendedNumbers);
+    saveRecommendation(userId, AlgorithmType.ODD_EVEN_RATIO, recommendedNumbers);
     return recommendedNumbers;
   }
 
@@ -333,32 +334,48 @@ public class RecommendationService {
    */
   @Transactional(readOnly = true)
   public MyPageResponseDto getMyRecommendations(Long userId) {
-    //1. 최신 당첨 번호 조회(데이터가 없을 경우 null 처리)
+
     LottoRound latestRound = lottoRoundRepository.findTopByOrderByRoundDesc().orElse(null);
-
-    //2. 당첨 회차 정보가 아예 없을 경우 빈 데이터 반환
-    if (latestRound == null) {
-      return new MyPageResponseDto(null, List.of());
-    }
-
-    //3. 사용자의 모든 추천 기록을 가져옴.
+    
+    //1. 사용자의 모든 추천 기록을 가져옴.
     List<Recommendation> recommendations = recommendationRepository.findByUserIdOrderByIdDesc(
         userId);
 
-    //4. 추천 기록(Entity) 목록을 DTO 목록으로 변환
-    List<RecommendationResponseDto> recommendationResponseDtos = new ArrayList<>();
+    //2. 추천 기록들에서 필요한 모든 회차 번호를 중벅없이 추출
+    Set<Integer> roundNumbers = recommendations.stream()
+        .map(Recommendation::getLottoRound)
+        .collect(Collectors.toSet());
 
+    //3. 추출된 회차 번호에 해당하는 모든 당점 정보를 DB에서 한번에 조회
+    Map<Integer, LottoRound> lottoRoundMap = lottoRoundRepository.findAllByRoundIn(roundNumbers)
+        .stream()
+        .collect(Collectors.toMap(LottoRound::getRound, round -> round));
+
+    List<RecommendationResponseDto> recommendationResponseDtos = new ArrayList<>();
     for (Recommendation recommendation : recommendations) {
       RecommendationResponseDto recommendationResponseDto = new RecommendationResponseDto(
           recommendation);
-      //등수 계산 로직
-      Integer matchCount = recommendation.getMatchCount();
-      //추천 기록의 회차가 아직 추첨 전이면 matchCount가 null일 수 있음.
-      if (matchCount != null) {
-        Boolean isBonusMatched = recommendation.getIsBonusMatched();
-        String rank = calculateRank(matchCount, isBonusMatched);
-        recommendationResponseDto.setRank(rank);
+
+      //4. 현재 추천 기록의 회차에 해당하는 당첨 정보를 Map에서 찾음
+      LottoRound winningRound = lottoRoundMap.get(recommendation.getLottoRound());
+
+      //5. 해당 회차의 추첨이 완료되었거나 당첨 정보가 있을 경우
+      if (winningRound != null) {
+        //DTO에 해당 회차의 당첨 번호와 보너스 번호를 설정
+        recommendationResponseDto.setWinningNumbers(List.of(winningRound.getWinNum1(),
+            winningRound.getWinNum2(), winningRound.getWinNum3(), winningRound.getWinNum4(),
+            winningRound.getWinNum5(), winningRound.getWinNum6()));
+        recommendationResponseDto.setBonusNumber(winningRound.getBonusNum());
+
+        //등수 계산 로직
+        Integer matchCount = recommendation.getMatchCount();
+        if (matchCount != null) {
+          Boolean isBonusMatched = recommendation.getIsBonusMatched();
+          String rank = calculateRank(matchCount, isBonusMatched);
+          recommendationResponseDto.setRank(rank);
+        }
       } else {
+        //아직 추첨 전인 경우
         recommendationResponseDto.setRank("추첨 전");
       }
       recommendationResponseDtos.add(recommendationResponseDto);

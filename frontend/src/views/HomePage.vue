@@ -127,7 +127,7 @@ const isChatReady = ref(false)
 const messagesAreaRef = ref('')
 let stompClient = null
 
-const roomId = computed(() => latestLottoData.value?.round)
+const roomId = computed(() => (latestLottoData.value ? latestLottoData.value.round + 1 : null))
 
 const startChat = () => {
   if (!authStore.isLoggedIn) {
@@ -360,11 +360,56 @@ const leaveChat = () => {
   padding: 2rem;
   border-right: 1px solid #ddd;
   overflow-y: auto;
-  max-width: 800px;
-  margin: 0 auto;
   text-align: center;
 }
 
+/* --- 오른쪽: 채팅 콘텐츠 --- */
+.chat-content {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+  position: relative; /* 토글 버튼 위치의 기준점이 됨 */
+  transition: flex 0.3s ease-in-out;
+}
+
+.chat-content.collapsed {
+  flex: 0 0 50px;
+}
+
+.chat-toggle-button {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 56px;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 14px 0 0 14px;
+  cursor: pointer;
+  z-index: 10;
+  font-size: 20px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.chat-toggle-button:hover {
+  background-color: #0056b3;
+}
+
+.chat-ui-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* --- 로또 콘텐츠 내부 스타일 --- */
 .latest-winning-section {
   background-color: #f0faff;
   padding: 20px;
@@ -407,11 +452,12 @@ button {
   border-radius: 8px;
   border: 1px solid #ccc;
   background-color: white;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out; /* [수정] 부드러운 전환 효과 */
 }
 
 button:hover:not(:disabled) {
-  background-color: #e9ecef;
+  transform: scale(1.05); /* 5% 확대 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 button:disabled {
@@ -484,14 +530,7 @@ button:disabled {
   font-size: 16px;
 }
 
-/* --- 오른쪽: 채팅 콘텐츠 --- */
-.chat-content {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  background-color: #f9f9f9;
-}
-
+/* --- 채팅 UI 스타일 --- */
 .nickname-prompt {
   display: flex;
   flex-direction: column;
@@ -530,15 +569,34 @@ button:disabled {
 }
 
 .chat-header {
+  position: relative; /* [수정] 나가기 버튼 위치의 기준점 역할 */
   padding: 1rem;
   background-color: #e9ecef;
   border-bottom: 1px solid #ddd;
   text-align: center;
+  display: flex; /* [추가] 자식 요소들을 정렬하기 위해 flex 사용 */
+  justify-content: center; /* [추가] 제목을 중앙에 정렬 */
+  align-items: center; /* [추가] 세로 중앙 정렬 */
 }
 
 .chat-header h3 {
   margin: 0;
   font-size: 1.2rem;
+}
+
+/* [수정] 나가기 버튼 스타일 */
+.leave-button {
+  position: absolute; /* 헤더를 기준으로 위치를 잡음 */
+  right: 1rem; /* 오른쪽에서 1rem 만큼 떨어짐 */
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+}
+
+.leave-button:hover {
+  background-color: #5a6268;
 }
 
 .messages-area {
@@ -618,22 +676,5 @@ button:disabled {
   border-radius: 20px;
   padding: 0.5rem 1.5rem;
   margin-left: 0.5rem;
-}
-
-.leave-button {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 4px 8px;
-  font-size: 12px;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.chat-header {
-  position: relative; /* 자식 요소의 absolute 위치를 위한 기준점 */
 }
 </style>

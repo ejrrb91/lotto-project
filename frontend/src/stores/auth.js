@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', () => {
   //State : store에서 관리할 상태(데이터)
   //페이지를 새로고침해도 로그인 상태가 유지되도록 localStorage에서 초기값을 가져옴.
   const accessToken = ref(localStorage.getItem('accessToken'))
+  const refreshToken = ref(localStorage.getItem('refreshToken'))
   const user = ref(null)
 
   // Getter (computed): state를 기반으로 하는 계산된 값
@@ -24,13 +25,17 @@ export const useAuthStore = defineStore('auth', () => {
   function setTokens(newAccessToken, newRefreshToken) {
     // Pinia의 실시간 상태(state)를 업데이트
     accessToken.value = newAccessToken
+    refreshToken.value = newRefreshToken
     // 새로고침을 위해 localStorage에도 저장.
     localStorage.setItem('accessToken', newAccessToken)
+    localStorage.setItem('accessToken', newRefreshToken)
   }
 
   function logout() {
     accessToken.value = null
+    refreshToken.value = null
     localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
     alert('로그아웃 되었습니다.')
     router.push('/')
   }
@@ -73,6 +78,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     accessToken,
+    refreshToken,
     isLoggedIn,
     userNickname,
     setTokens,

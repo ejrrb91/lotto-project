@@ -4,6 +4,7 @@ import com.example.lotto_project.domain.LottoRound;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface LottoRoundRepository extends JpaRepository<LottoRound, Integer> {
@@ -19,5 +20,5 @@ public interface LottoRoundRepository extends JpaRepository<LottoRound, Integer>
   //가장 최신 회차 5개의 데이터를 조회
   List<LottoRound> findTop5ByOrderByRoundDesc();
 
-
+  List<LottoRound> findAllByRoundIn(Set<Integer> rounds);
 }

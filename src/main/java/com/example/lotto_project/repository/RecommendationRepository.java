@@ -1,7 +1,9 @@
 package com.example.lotto_project.repository;
 
+import com.example.lotto_project.domain.LottoRound;
 import com.example.lotto_project.domain.Recommendation;
 import java.util.List;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RecommendationRepository extends JpaRepository<Recommendation, Long> {
