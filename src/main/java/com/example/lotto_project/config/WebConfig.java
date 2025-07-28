@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
     //모든 경로("/**")에 대해서 CORS 설정을 적용
     corsRegistry.addMapping("/**")
         //Nginx를 통해 접속하는 주소인 http://localhost를 허용
-        .allowedOrigins("http://localhost")
+        .allowedOrigins("http://localhost", "http://13.211.89.12")
         //허용할 HTTP 메서드 지정
         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
         //요청 헤더에 포함될 수 있는 값을 지정
