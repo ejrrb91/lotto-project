@@ -162,7 +162,7 @@ public class RecommendationService {
 
     List<Integer> raffleBox = new ArrayList<>();
 
-    for (int i = 0; i <= 45; i++) {
+    for (int i = 1; i <= 45; i++) {
       if (recentWinningNumbers.contains(i)) {
         //최근에 나왔을 경우 (가중치 1)
         raffleBox.add(i);
@@ -193,7 +193,7 @@ public class RecommendationService {
     int maxFrequency = numbersFrequency.isEmpty() ? 0 : Collections.max(numbersFrequency.values());
 
     //3. 희귀한 정도에 따라서 가중치가 부여된 RaffleBox 생성
-    for (int i = 0; i <= 45; i++) {
+    for (int i = 1; i <= 45; i++) {
       int frequency = numbersFrequency.getOrDefault(i, 0);
       int weight = maxFrequency - frequency; //나온 횟수가 적을 수록 가중치가 높아짐.
 
@@ -336,7 +336,7 @@ public class RecommendationService {
   public MyPageResponseDto getMyRecommendations(Long userId) {
 
     LottoRound latestRound = lottoRoundRepository.findTopByOrderByRoundDesc().orElse(null);
-    
+
     //1. 사용자의 모든 추천 기록을 가져옴.
     List<Recommendation> recommendations = recommendationRepository.findByUserIdOrderByIdDesc(
         userId);
