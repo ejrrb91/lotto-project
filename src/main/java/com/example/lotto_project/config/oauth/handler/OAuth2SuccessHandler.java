@@ -7,7 +7,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtUtil jwtUtil;
+  private final RedisTemplate redisTemplate;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
@@ -35,7 +38,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     String accessToken = jwtUtil.createAccessToken(email, nickname);
     String refreshToken = jwtUtil.createRefreshToken(email, nickname);
 
-    //4. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
+    //4. Redis에 RefreshToken 저장
+    redisTemplate.opsForValue().set(
+        email,
+        refreshToken,
+        JwtUtil.REFRESH_TOKEN_EXPIRATION_TIME,
+        TimeUnit.MILLISECONDS
+    );
+
+    //5. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
     String targetUrl = UriComponentsBuilder.fromUriString("http://lottohelper.kr/")
         .queryParam("accessToken", accessToken)
         .queryParam("refreshToken", refreshToken)
