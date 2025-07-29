@@ -1,6 +1,25 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import Header from '@/components/Header.vue'
+import { useAuthStore } from '@/stores/auth.js'
+import { onMounted } from 'vue'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+
+onMounted(() => {
+  //URL 쿼리 파라미터에서 토큰 확인
+  const accessToken = route.query.accessToken
+  const refreshToken = route.query.refreshToken
+
+  if (accessToken && refreshToken) {
+    //토큰이 있을 경우 저장소에 저장
+    authStore.setTokens(accessToken, refreshToken)
+    //URL에서 토큰 정보 제거
+    router.replace({ query: {} })
+  }
+})
 </script>
 
 <template>
