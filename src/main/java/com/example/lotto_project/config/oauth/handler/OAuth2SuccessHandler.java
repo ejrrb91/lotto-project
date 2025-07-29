@@ -36,7 +36,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     String refreshToken = jwtUtil.createRefreshToken(email, nickname);
 
     //4. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
-    String targetUrl = UriComponentsBuilder.fromUriString("http://13.211.89.12/oauth2/redirect")
+    String targetUrl = UriComponentsBuilder.fromUriString("http://lottohelper.kr/oauth2/redirect")
         .queryParam("accessToken", accessToken)
         .queryParam("refreshToken", refreshToken)
         .build()
