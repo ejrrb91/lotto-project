@@ -18,6 +18,8 @@ onMounted(() => {
     authStore.setTokens(accessToken, refreshToken)
     //URL에서 토큰 정보 제거
     router.replace({ query: {} })
+    //페이지를 새로고침하여 로그인 상태 반영
+    window.location.reload()
   }
 })
 </script>
