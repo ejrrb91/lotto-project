@@ -33,21 +33,24 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
-    try {
-      //1. 백엔드에 로그아웃 요청을 보내 Redis의 RefreshToken 삭제를 시도
-      await apiClient.post('/api/users/logout')
-      console.log('서버 측 로그아웃 성공')
-    } catch (error) {
-      //2. 서버와의 통신이 실패하더라도 프론트엔드에서는 로그아웃 처리를 진행
-      console.log('서버 측 로그아웃 실패')
-    } finally {
-      //3. API 호출 성공 여부와 관계없이 브라우저의 상태와 저장소는 정리
-      accessToken.value = null
-      refreshToken.value = null
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      alert('로그아웃 되었습니다.')
-      router.push('/')
+    if (confirm('정말 로그아웃 하시겠습니까?')) {
+      try {
+        //1. 백엔드에 로그아웃 요청을 보내 Redis의 RefreshToken 삭제를 시도
+        await apiClient.post('/api/users/logout')
+        console.log('서버 측 로그아웃 성공')
+      } catch (error) {
+        //2. 서버와의 통신이 실패하더라도 프론트엔드에서는 로그아웃 처리를 진행
+        console.log('서버 측 로그아웃 실패')
+      } finally {
+        //3. API 호출 성공 여부와 관계없이 브라우저의 상태와 저장소는 정리
+        accessToken.value = null
+        refreshToken.value = null
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('chatUsername')
+        alert('로그아웃 되었습니다.')
+        router.push('/')
+      }
     }
   }
 

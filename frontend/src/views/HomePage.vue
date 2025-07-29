@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import apiClient from '@/api/axios.js'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth.js'
@@ -129,6 +129,13 @@ let stompClient = null
 
 const roomId = computed(() => (latestLottoData.value ? latestLottoData.value.round + 1 : null))
 
+onMounted(() => {
+  const savedUsername = sessionStorage.getItem('chatUsername')
+  if (savedUsername && authStore.isLoggedIn) {
+    chatUsername.value = savedUsername
+    isChatReady.value = true
+  }
+})
 const startChat = () => {
   if (!authStore.isLoggedIn) {
     alert('채팅은 로그인이 필요한 기능입니다.')
@@ -165,15 +172,19 @@ const connect = () => {
         messages.value.push(JSON.parse(message.body))
         scrollToBottom()
       })
-      stompClient.publish({
-        destination: `/app/chat.addUser/${roomId.value}`,
-        body: JSON.stringify({
-          type: `ENTER`,
-          roomId: roomId.value,
-          sender: chatUsername.value,
-          message: `${chatUsername.value}님이 입장하셨습니다.`,
-        }),
-      })
+      //처음 입장할 때만 입장 메시지를 보냄
+      if (nicknameInput.value.trim()) {
+        stompClient.publish({
+          destination: `/app/chat.addUser/${roomId.value}`,
+          body: JSON.stringify({
+            type: `ENTER`,
+            roomId: roomId.value,
+            sender: chatUsername.value,
+            message: `${chatUsername.value}님이 입장하셨습니다.`,
+          }),
+        })
+        nicknameInput.value = ''
+      }
     },
     onStompError: (frame) => {
       console.error('STOMP Error :', frame)
@@ -232,6 +243,15 @@ const leaveChat = () => {
   chatUsername.value = ''
   nicknameInput.value = ''
 }
+
+watch(
+  () => authStore.isLoggedIn,
+  (isLoggedIn) => {
+    if (!isLoggedIn && isChatReady.value) {
+      leaveChat()
+    }
+  },
+)
 </script>
 
 <template>
