@@ -124,7 +124,7 @@ const chatUsername = ref('')
 const messages = ref([])
 const newMessage = ref('')
 const isChatReady = ref(false)
-const messagesAreaRef = ref('')
+const messagesAreaRef = ref(null)
 let stompClient = null
 
 const roomId = computed(() => (latestLottoData.value ? latestLottoData.value.round + 1 : null))
@@ -132,7 +132,12 @@ const roomId = computed(() => (latestLottoData.value ? latestLottoData.value.rou
 //컴포넌트가 처음 로드될 때, 저장된 닉네임으로 자동 재접속을 시도
 onMounted(() => {
   const savedUsername = sessionStorage.getItem('chatUsername')
-  if (savedUsername && authStore.isLoggedIn) {
+  if (savedUsername && authStore.isLoggedIn && roomId.value) {
+    //저장된 대화 내용이 있으면 불러옴
+    const savedMessages = sessionStorage.getItem(`chatHistory_${roomId.value}`)
+    if (savedMessages) {
+      messages.value = JSON.parse(savedMessages)
+    }
     chatUsername.value = savedUsername
     isChatReady.value = true
   }
@@ -175,7 +180,10 @@ const connect = () => {
     onConnect: () => {
       console.log(`STOMP: ${roomId.value}회차 채팅방에 연결되었습니다.`)
       stompClient.subscribe(`/topic/chat/room/${roomId.value}`, (message) => {
-        messages.value.push(JSON.parse(message.body))
+        const receivedMessage = JSON.parse(message.body)
+        messages.value.push(receivedMessage)
+        //메시지를 받을 때마다 대화 내용을 저장
+        sessionStorage.setItem(`chatHistory_${roomId.value}`, JSON.stringify(messages.value))
         scrollToBottom()
       })
       //처음 입장할 때만 입장 메시지를 보냄
@@ -196,6 +204,7 @@ const connect = () => {
       console.error('STOMP Error :', frame)
       alert('채팅 서버에 연결할 수 없습니다. 로그인 상태를 확인해주세요.')
       isChatReady.value = false
+      sessionStorage.removeItem('chatUsername')
     },
   })
   stompClient.activate()
@@ -239,7 +248,8 @@ const leaveChat = () => {
     })
     stompClient.deactivate()
   }
-  //세션 정보를 모두 초기화
+  //세션 정보를 모두 초기화 및 대화 내용 삭제
+  sessionStorage.removeItem(`chatHistory_${roomId.value}`)
   sessionStorage.removeItem('chatUsername')
   isChatReady.value = false
   messages.value = []
