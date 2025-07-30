@@ -10,7 +10,6 @@ import com.example.lotto_project.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -63,6 +62,10 @@ public class SecurityConfig {
     //OAuth2(소셜 로그인) 설정
     httpSecurity.oauth2Login(
         oauth2 -> oauth2
+            //authorizationEndpoint의 기본 URI를 명시적으로 설정
+            .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorization"))
+            //redirectionEndpoint의 기본 URI를 명시적으로 설정
+            .redirectionEndpoint(redirection -> redirection.baseUri("/login/oauth2/code/*"))
             //소셜 로그인 성공 후, 사용자 정보를 가져오는 최종 엔드포인트(user-info-uri)에서 사용자 정보를 처리할 서비스 지정
             .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
             //소셜 로그인의 모든 과정이 성공적으로 끝나면, successHandler를 호출하여 후속 작업 진행(JWT 토큰 발급 및 리디렉션)

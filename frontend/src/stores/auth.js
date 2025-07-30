@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { jwtDecode } from 'jwt-decode'
 import router from '@/router/index.js'
 import apiClient from '@/api/axios.js'
@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // useRouter는 <script setup>이나 setup() 함수 안에서만 사용 가능하므로,
   // 필요하다면 사용하는 컴포넌트에서 직접 호출.
-  // const router = useRouter();
+  const router = useRouter()
 
   //Actions: 토큰을 상태와 localStorage에 저장하는 함수
   function setTokens(newAccessToken, newRefreshToken) {
@@ -29,7 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = newRefreshToken
     // 새로고침을 위해 localStorage에도 저장.
     localStorage.setItem('accessToken', newAccessToken)
-    localStorage.setItem('accessToken', newRefreshToken)
+    localStorage.setItem('refreshToken', newRefreshToken)
   }
 
   async function logout() {
