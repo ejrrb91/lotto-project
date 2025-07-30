@@ -24,12 +24,23 @@ export const useAuthStore = defineStore('auth', () => {
 
   //Actions: 토큰을 상태와 localStorage에 저장하는 함수
   function setTokens(newAccessToken, newRefreshToken) {
+    console.log('[디버그 auth.js]  setTokens 함수가 호출되었습니다. 전달받은 토큰:', {
+      newAccessToken,
+      newRefreshToken,
+    })
     // Pinia의 실시간 상태(state)를 업데이트
     accessToken.value = newAccessToken
     refreshToken.value = newRefreshToken
     // 새로고침을 위해 localStorage에도 저장.
     localStorage.setItem('accessToken', newAccessToken)
     localStorage.setItem('refreshToken', newRefreshToken)
+
+    // [추가] 저장 직후 확인 로그
+    if (localStorage.getItem('accessToken')) {
+      console.log('[디버그 auth.js] 4-1. LocalStorage에 accessToken 저장을 확인했습니다.')
+    } else {
+      console.error('[디버그 auth.js] 4-1. LocalStorage에 accessToken 저장 실패!')
+    }
   }
 
   async function logout() {

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -17,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtUtil jwtUtil;
@@ -26,6 +28,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse, Authentication authentication)
       throws IOException, ServletException {
+    log.info("[디버그 OAuth] 1. onAuthenticationSuccess 핸들러가 성공적으로 실행되었습니다.");
     //1. Spring Security의 SecurityContext에서 인증된 사용자 정보를 가져옴.
     //이 정보는 CustomOAuth2UserService에서 반환한 UserDetailsImpl 객체임.
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -37,6 +40,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     //3.JwtUtil을 사용하여 AccessToken과 RefreshToken을 생성
     String accessToken = jwtUtil.createAccessToken(email, nickname);
     String refreshToken = jwtUtil.createRefreshToken(email, nickname);
+    log.info("[디버그 OAuth] 2. Access/Refresh 토큰 생성을 완료했습니다.");
 
     //4. Redis에 RefreshToken 저장
     redisTemplate.opsForValue().set(
@@ -45,6 +49,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         JwtUtil.REFRESH_TOKEN_EXPIRATION_TIME,
         TimeUnit.MILLISECONDS
     );
+    log.info("[디버그 OAuth] 3. Redis에 Refresh Token 저장을 완료했습니다.");
 
     //5. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
     String targetUrl = UriComponentsBuilder.fromUriString("http://lottohelper.kr/")
@@ -53,6 +58,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         .build()
         .encode(StandardCharsets.UTF_8)
         .toUriString();
+    log.info("[디버그 OAuth] 4. 최종 리디렉션 URL을 생성했습니다: {}", targetUrl);
 
     //5. 생성된 URL로 사용자를 리디렉션
     httpServletResponse.sendRedirect(targetUrl);
