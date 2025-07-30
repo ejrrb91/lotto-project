@@ -14,7 +14,6 @@ onMounted(() => {
 
   if (accessToken) {
     //2. 토큰이 존재하면, Pinia 스토어와 Local Storage에 저장
-    console.log('소셜 로그인 성공, 토큰 저장합니다.')
     authStore.setTokens(accessToken, refreshToken)
 
     //3. 메인페이지로 리디렉션

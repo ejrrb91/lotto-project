@@ -129,6 +129,7 @@ let stompClient = null
 
 const roomId = computed(() => (latestLottoData.value ? latestLottoData.value.round + 1 : null))
 
+//컴포넌트가 처음 로드될 때, 저장된 닉네임으로 자동 재접속을 시도
 onMounted(() => {
   const savedUsername = sessionStorage.getItem('chatUsername')
   if (savedUsername && authStore.isLoggedIn) {
@@ -136,6 +137,8 @@ onMounted(() => {
     isChatReady.value = true
   }
 })
+
+//채탕 시작
 const startChat = () => {
   if (!authStore.isLoggedIn) {
     alert('채팅은 로그인이 필요한 기능입니다.')
@@ -147,10 +150,13 @@ const startChat = () => {
     return
   }
   chatUsername.value = nicknameInput.value
+  //닉네임을 세션 저장소에 저장하여 새로고침, 페이지 이동 후에도 기억
+  sessionStorage.setItem('chatUsername', chatUsername.value)
   isChatReady.value = true
 }
+//isChatReady 상태가 true로 바뀌면 connect 함수 호출
 watch(isChatReady, (newVal) => {
-  if (newVal && roomId.value) {
+  if (newVal && roomId.value && !stompClient?.active) {
     connect()
   }
 })
@@ -210,12 +216,6 @@ const sendMessage = () => {
   }
 }
 
-onUnmounted(() => {
-  if (stompClient?.active) {
-    stompClient.deactivate()
-  }
-})
-
 const getMessageClass = (msg) => {
   if (msg.type === 'ENTER' || msg.type === 'LEAVE') {
     return 'system-message-container'
@@ -230,6 +230,7 @@ const scrollToBottom = async () => {
   }
 }
 
+//사용자가 '나가기'를 누를때 실행되는 함수
 const leaveChat = () => {
   if (stompClient?.active) {
     stompClient.publish({
@@ -238,12 +239,15 @@ const leaveChat = () => {
     })
     stompClient.deactivate()
   }
+  //세션 정보를 모두 초기화
+  sessionStorage.removeItem('chatUsername')
   isChatReady.value = false
   messages.value = []
   chatUsername.value = ''
   nicknameInput.value = ''
 }
 
+//로그아웃 시 채팅방을 나가도록 authStore의 상태를 감시
 watch(
   () => authStore.isLoggedIn,
   (isLoggedIn) => {
