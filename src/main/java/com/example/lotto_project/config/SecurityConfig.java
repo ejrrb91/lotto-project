@@ -77,7 +77,8 @@ public class SecurityConfig {
         // "/api/users/**": 회원가입, 로그인 등 인증 없이 사용해야 하는 기능들이므로, 누구나 접근을 허용.
         // "/oauth2/**": 소셜 로그인 프로세스를 위한 경로이므로, 누구나 접근을 허용.
         // "/api/main-page": 메인 페이지 데이터는 로그인하지 않은 사용자도 볼 수 있으므로, 누구나 접근을 허용.
-        .requestMatchers("/ws/**", "/api/users/**", "/oauth2/**", "/api/main-page").permitAll()
+        .requestMatchers("/ws/**", "/api/users/**", "/oauth2/**", "/login/**", "/api/main-page")
+        .permitAll()
         // "/api/users/reissue": 토큰 재발급 경로는 모두 허용
         .requestMatchers("/api/users/reissue").permitAll()
         // "/api/recommend/**": 추천 API는 인증된 사용자만 접근
