@@ -141,6 +141,13 @@ onMounted(() => {
     chatUsername.value = savedUsername
     isChatReady.value = true
   }
+  //브라우저의 창을 닫거나 새로고침할 때의 이벤트 감지
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onUnmounted(() => {
+  //컴포넌트가 사라질 때 이벤트 리스너 제거
+  window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
 //채탕 시작
@@ -239,7 +246,7 @@ const scrollToBottom = async () => {
   }
 }
 
-//사용자가 '나가기'를 누를때 실행되는 함수
+//사용자가 '나가기'를 누를 때 및 로그아웃 시 실행되는 함수
 const leaveChat = () => {
   if (stompClient?.active) {
     stompClient.publish({
@@ -255,6 +262,18 @@ const leaveChat = () => {
   messages.value = []
   chatUsername.value = ''
   nicknameInput.value = ''
+}
+
+//브라우저가 닫히거나 새로고침 되기 직전에 호출되는 함수
+const handleBeforeUnload = () => {
+  //세션은 유지해야 하므로, 나간다는 메시지만 보내고 연결만 종료
+  if (stompClient?.active) {
+    stompClient.publish({
+      destination: `app/chat.leaveUser/${roomId.value}`,
+      body: JSON.stringify({ type: 'LEAVE', sender: chatUsername.value }),
+    })
+    stompClient.deactivate()
+  }
 }
 
 //로그아웃 시 채팅방을 나가도록 authStore의 상태를 감시
