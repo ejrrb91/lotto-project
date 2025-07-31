@@ -269,7 +269,7 @@ const handleBeforeUnload = () => {
   //세션은 유지해야 하므로, 나간다는 메시지만 보내고 연결만 종료
   if (stompClient?.active) {
     stompClient.publish({
-      destination: `app/chat.leaveUser/${roomId.value}`,
+      destination: `/app/chat.leaveUser/${roomId.value}`,
       body: JSON.stringify({ type: 'LEAVE', sender: chatUsername.value }),
     })
     stompClient.deactivate()
