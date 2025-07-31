@@ -12,13 +12,14 @@ onMounted(() => {
   const accessToken = route.query.accessToken
   const refreshToken = route.query.refreshToken
 
-  if (accessToken) {
+  if (accessToken && refreshToken) {
     //2. 토큰이 존재하면, Pinia 스토어와 Local Storage에 저장
     authStore.setTokens(accessToken, refreshToken)
 
     //3. 메인페이지로 리디렉션
     // SPA 라우팅 대신, 페이지를 완전히 새로고침하여 이동.
-    window.location.href = '/'
+    //replace를 사용하면 브라우저 히스토리에 이 페이지가 남지 않음
+    router.replace('/')
   } else {
     //4. 토큰이 없을 경우 로그인 페이지로 이동
     console.error('소셜 로그인 실패, 토큰이 없습니다.')
