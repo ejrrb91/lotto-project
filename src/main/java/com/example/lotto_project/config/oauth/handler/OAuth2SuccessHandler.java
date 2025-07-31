@@ -49,7 +49,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     );
 
     //5. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
-    String targetUrl = UriComponentsBuilder.fromUriString("https://lottohelper.kr/oauth2/redirect")
+    String targetUrl = UriComponentsBuilder.fromUriString("https://lottohelper.kr/")
         .queryParam("accessToken", accessToken)
         .queryParam("refreshToken", refreshToken)
         .build()
