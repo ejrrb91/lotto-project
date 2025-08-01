@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -22,12 +23,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtUtil jwtUtil;
-  private final RedisTemplate redisTemplate;
+  private final RedisTemplate<String, String> redisTemplate;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse, Authentication authentication)
-      throws IOException, ServletException {
+      throws IOException {
     //1. Spring Security의 SecurityContext에서 인증된 사용자 정보를 가져옴.
     //이 정보는 CustomOAuth2UserService에서 반환한 UserDetailsImpl 객체임.
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -49,7 +50,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     );
 
     //5. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
-    String targetUrl = UriComponentsBuilder.fromUriString("https://lottohelper.kr/")
+    //요청 받은 서버 주소를 기반으로 동적으로 리디렉션 URL을 생성
+    String targetUrl = UriComponentsBuilder.fromHttpRequest(
+            new ServletServerHttpRequest(httpServletRequest))
+        .replacePath("/oauth2/redirect") //목적지를 토큰 처리 페이지로 설정
         .queryParam("accessToken", accessToken)
         .queryParam("refreshToken", refreshToken)
         .build()
@@ -57,6 +61,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         .toUriString();
 
     //5. 생성된 URL로 사용자를 리디렉션
+    log.info("최종 리디렉션 URL : {}", targetUrl);
     httpServletResponse.sendRedirect(targetUrl);
   }
 }

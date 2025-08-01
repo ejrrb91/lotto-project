@@ -15,7 +15,7 @@
 - ** 데이터 기반 로또 번호 추천**
     - `랜덤`, `통계 기반`, `최근 미출현`, `희귀 번호`, `6개월 분석`, `홀/짝 조합` 등 6가지의 다양한 알고리즘 제공
     - `@Scheduled`를 이용한 매주 토요일 자동 데이터 업데이트 기능
-    - 관리자용 API를 통한 수동 데이터 업데이트 기능
+    - API를 통한 수동 데이터 업데이트 기능
 - ** 사용자 기능**
     - JWT (Access Token, Refresh Token) 기반의 자체 회원가입 및 로그인
     - Google 소셜 로그인 (OAuth2)
@@ -32,20 +32,22 @@
 
 ## ️ 기술 스택
 
-| 구분         | 기술                                                                            |
-| ------------ | ------------------------------------------------------------------------------- |
-| **Backend** | Java 17, Spring Boot, Spring Security, JPA, WebSocket, JWT, Redis, Jsoup        |
-| **Frontend** | Vue.js, Pinia, Vue Query, Axios, StompJS, SockJS                                |
-| **Database** | PostgreSQL                                                                      |
-| **Infra** | AWS EC2 (Ubuntu 22.04 LTS), Docker, Docker Compose, Nginx, Let's Encrypt, Git     |
+| 구분           | 기술                                                                            |
+|--------------|-------------------------------------------------------------------------------|
+| **Backend**  | Java 17, Spring Boot, Spring Security, JPA, WebSocket, JWT, Redis, Jsoup      |
+| **Frontend** | Vue.js, Pinia, Vue Query, Axios, StompJS, SockJS                              |
+| **Database** | PostgreSQL                                                                    |
+| **Infra**    | AWS EC2 (Ubuntu 22.04 LTS), Docker, Docker Compose, Nginx, Let's Encrypt, Git |
 
 <br/>
 
 ## 시작하기
 
+이 프로젝트는 로컬 개발 환경과 실제 서버 배포 환경에서 사용하는 설정이 다릅니다.
+
 1. **Git Clone**
    ```bash
-   git clone [https://github.com/ejrrb91/lotto-project.git](https://github.com/ejrrb91/lotto-project.git)
+   git clone https://github.com/ejrrb91/lotto-project.git
    cd lotto-project
    ```
 
@@ -60,10 +62,62 @@
    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=...
    ```
 
-3. **Docker 실행 (로컬)**
+3. **로컬용 Nginx 설정 적용**
+   프로젝트 내의 `nginx/default.conf` 파일 내용을 아래의 **로컬 개발용 설정**으로 교체합니다.
+
+   <details>
+   <summary>nginx/default.conf (로컬 개발용)</summary>
+
+   ```nginx
+   server {
+       listen 80;
+
+       location / {
+           root   /usr/share/nginx/html;
+           index  index.html index.htm;
+           try_files $uri $uri/ /index.html;
+       }
+
+       location /login {
+           proxy_pass http://backend:8080;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+       
+       location /oauth2 {
+           proxy_pass http://backend:8080;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+
+       location /api {
+           proxy_pass http://backend:8080;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+
+       location /ws {
+           proxy_pass http://backend:8080;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection "Upgrade";
+           proxy_set_header Host $host;
+       }
+   }
+   ```
+   </details>
+   <br/>
+
+4. **Docker 실행 (로컬)**
    ```bash
    docker-compose up --build -d
    ```
 
-4. **접속**
+5. **접속**
    웹 브라우저에서 `http://localhost` 로 접속합니다.
