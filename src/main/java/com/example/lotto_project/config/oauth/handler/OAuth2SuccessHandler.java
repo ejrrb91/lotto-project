@@ -23,14 +23,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtUtil jwtUtil;
-  private final RedisTemplate redisTemplate;
+  private final RedisTemplate<String, String> redisTemplate;
   @Value("${oauth.redirect-url.frontend}")
   private String frontendRedirectUrl;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse, Authentication authentication)
-      throws IOException, ServletException {
+      throws IOException {
     //1. Spring Security의 SecurityContext에서 인증된 사용자 정보를 가져옴.
     //이 정보는 CustomOAuth2UserService에서 반환한 UserDetailsImpl 객체임.
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
