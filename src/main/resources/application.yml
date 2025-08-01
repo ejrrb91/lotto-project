@@ -1,12 +1,9 @@
-#Default Profile
+#기본 및 공통 설정
 spring:
   profiles:
+    #기본 활성화 프로필을 'local'로 설정
+    #서버 배포 시에는 'prod'로 변경해서 실행
     active: local
-  # 데이터베이스 연결 정보
-  datasource:
-    url: jdbc:postgresql://localhost:5432/lotto  # 로컬 DB 또는 포트포워딩된 Docker DB 주소
-    driver-class-name: org.postgresql.Driver
-
   # JPA (Java Persistence API) 설정
   jpa:
     hibernate:
@@ -38,18 +35,77 @@ spring:
               - email
               - profile
 
----
-#Docker Profile
-spring:
-  config:
-    activate:
-      on-profile: "docker"
-  data:
-    redis:
-      host: redis #Docker 환경에서는 'redis' 컨테이너를 바라봄
-      port: 6379
-
 # 로깅 레벨 설정 (JPA 쿼리 파라미터 값도 로그로 보려면)
 logging:
   level:
     org.hibernate.type.descriptor.sql: trace
+
+---
+#로컬 환경 프로필
+spring:
+  config:
+    activate:
+      on-profile: "local"
+  #로컬 데이터베이스 연결 정보
+  datasource:
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  #로컬 OAuth 리디렉션 URI 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+
+---
+#Docker 환경 프로필
+spring:
+  config:
+    activate:
+      on-profile: "docker"
+  #Docker 환경 데이터베이스 연결 정보
+  datasource:
+    url: ${DOCKER_DB_URL}
+    username: ${DOCKER_DB_USERNAME}
+    password: ${DOCKER_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: redis #Docker 환경에서는 'redis' 컨테이너를 바라봄
+      port: 6379
+  #Docker 환경 OAuth 리디렉션 URI 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+
+---
+#운영 환경 프로필
+spring:
+  config:
+    activate:
+      on-profile: "prod"
+  #운영 서버 데이터베이스 연결 정보
+  datasource:
+    url: ${PROD_DB_URL}
+    username: ${PROD_DB_USERNAME}
+    password: ${PROD_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: redis
+      port: 6379
+  #운영 서버 OAuth 리디렉션 URI 설정
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: "https://lottohelper.kr/login/oauth2/code/google"
+
+

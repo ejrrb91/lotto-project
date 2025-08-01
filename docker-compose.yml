@@ -30,22 +30,13 @@ services: # 이 파일로 관리할 서비스(컨테이너)들의 목록
     depends_on:
       - db # 'db' 서비스가 먼저 실행된 후에 'backend' 서비스를 실행
       - redis # backend 서비스가 redis 서비스에 의존하도록 설정
+    env_file: #.env 파일을 읽어서 컨테이너에 환경변수로 주입
+      - .env
     environment:
       # Spring Boot 애플리케이션이 컨테이너 내부의 'db'를 바라보도록 설정
       - server.forward-headers-strategy=framework
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/lotto
-      - SPRING_DATASOURCE_USERNAME=lotto_id
-      - SPRING_DATASOURCE_PASSWORD=lotto_pw
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID}
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET}
+      - SPRING_PROFILES_ACTIVE=prod
       - TZ=Asia/Seoul
-      # SPRING BOOT가 컨테이너 내부의 redis를 바라보도록 설정
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-
 
   # frontend와 nginx 서비스를 'web' 서비스 하나로 통합
   web:
