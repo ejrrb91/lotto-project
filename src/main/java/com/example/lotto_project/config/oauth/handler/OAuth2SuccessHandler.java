@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -23,6 +24,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtUtil jwtUtil;
   private final RedisTemplate redisTemplate;
+  @Value("${oauth.redirect-url.frontend}")
+  private String frontendRedirectUrl;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest,
@@ -49,7 +52,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     );
 
     //5. UriComponentsBuilder를 사용하여 리디렉션 URL을 안전하게 생성
-    String targetUrl = UriComponentsBuilder.fromUriString("https://lottohelper.kr/")
+    String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUrl)
         .queryParam("accessToken", accessToken)
         .queryParam("refreshToken", refreshToken)
         .build()

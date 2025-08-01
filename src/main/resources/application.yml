@@ -48,9 +48,9 @@ spring:
       on-profile: "local"
   #로컬 데이터베이스 연결 정보
   datasource:
-    url: ${LOCAL_DB_URL}
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/lotto
+    username: lotto_id
+    password: lotto_pw
     driver-class-name: org.postgresql.Driver
   #로컬 OAuth 리디렉션 URI 설정
   security:
@@ -59,6 +59,10 @@ spring:
         registration:
           google:
             redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+  oauth:
+    redirect-url:
+      frontend: "http://localhost:5173/oauth2/redirect"
+
 
 ---
 #Docker 환경 프로필
@@ -83,6 +87,9 @@ spring:
         registration:
           google:
             redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+  oauth:
+    redirect-url:
+      frontend: "http://localhost:5173/oauth2/redirect"
 
 ---
 #운영 환경 프로필
@@ -107,5 +114,9 @@ spring:
         registration:
           google:
             redirect-uri: "https://lottohelper.kr/login/oauth2/code/google"
+  oauth:
+    redirect-url:
+      frontend: "https://lottohelper.kr/oauth2/redirect"
+
 
 
